@@ -1,8 +1,10 @@
 package com.mars.madereraapp.data.remote.model
 
+import com.google.gson.annotations.SerializedName
+
 data class LoginRequest(
-    val usuario: String,
-    val clave: String
+    @SerializedName("username") val usuario: String,
+    @SerializedName("password") val clave: String
 )
 
 data class LoginResponse(
