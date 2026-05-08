@@ -36,9 +36,23 @@ data class RequerimientoHistorialItem(
     val total_mina: Double
 )
 
+data class RequerimientoDetalleItem(
+    val id: Int,
+    val articulo: String,
+    val proveedor: String,
+    val pedido: Double,
+    val precio_proveedor: Double,
+    val precio_mina: Double,
+    val entregado: Double,
+    val faltante: Double
+)
+
 interface RequerimientoApiService {
     @GET("requerimientos/historial")
     suspend fun getHistorial(): List<RequerimientoHistorialItem>
+
+    @GET("requerimientos/{id}/detalles")
+    suspend fun getDetalles(@retrofit2.http.Path("id") id: Int): List<RequerimientoDetalleItem>
 
     @POST("requerimientos")
     suspend fun crear(@Body body: RequerimientoRequest): RequerimientoResponse

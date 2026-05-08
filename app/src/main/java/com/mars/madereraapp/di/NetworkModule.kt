@@ -50,6 +50,14 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
+            .addInterceptor { chain ->
+                val response = chain.proceed(chain.request())
+                // Si el servidor responde 401, el token venció — emitir evento global
+                if (response.code == 401) {
+                    UnauthorizedEventBus.emit()
+                }
+                response
+            }
             .build()
     }
 

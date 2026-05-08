@@ -34,12 +34,23 @@ data class IngresoHistorialItem(
     val total_entregado: Double
 )
 
+data class IngresoDetalleItem(
+    val id: Int,
+    val articulo: String,
+    val proveedor: String,
+    val cantidad_pedida: Double,
+    val cantidad_entregada: Double
+)
+
 interface IngresoApiService {
     @GET("ingresos/pendientes")
     suspend fun getPendientes(): List<RequerimientoPendienteEntity>
 
     @GET("ingresos")
     suspend fun getHistorial(): List<IngresoHistorialItem>
+
+    @GET("ingresos/{id}/detalle")
+    suspend fun getDetalle(@retrofit2.http.Path("id") id: Int): List<IngresoDetalleItem>
 
     @POST("ingresos")
     suspend fun crear(@Body body: IngresoRequest): IngresoResponse
