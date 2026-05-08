@@ -38,7 +38,7 @@ interface IngresoApiService {
     @GET("ingresos/pendientes")
     suspend fun getPendientes(): List<RequerimientoPendienteEntity>
 
-    @GET("ingresos/historial")
+    @GET("ingresos")
     suspend fun getHistorial(): List<IngresoHistorialItem>
 
     @POST("ingresos")

@@ -10,6 +10,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
+import kotlinx.coroutines.flow.firstOrNull
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -26,8 +28,27 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
+    fun provideAuthInterceptor(sessionManager: com.mars.madereraapp.data.SessionManager): okhttp3.Interceptor {
+        return okhttp3.Interceptor { chain ->
+            val token: String? = kotlinx.coroutines.runBlocking {
+                sessionManager.token.firstOrNull()
+            }
+            val requestBuilder = chain.request().newBuilder()
+            if (!token.isNullOrEmpty()) {
+                requestBuilder.addHeader("Authorization", "Bearer $token")
+            }
+            chain.proceed(requestBuilder.build())
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        loggingInterceptor: HttpLoggingInterceptor,
+        authInterceptor: okhttp3.Interceptor
+    ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }

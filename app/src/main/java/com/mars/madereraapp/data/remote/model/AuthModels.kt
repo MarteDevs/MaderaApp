@@ -8,13 +8,13 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
+    val mensaje: String?,
     val token: String,
-    val user: UserDto
+    @SerializedName("usuario") val user: UserDto
 )
 
 data class UserDto(
     val id: Int,
     val nombre: String,
-    val usuario: String,
-    val rol: String
+    @SerializedName("rol_id") val rolId: Int?
 )
