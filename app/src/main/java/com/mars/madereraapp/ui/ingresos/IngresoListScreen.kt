@@ -33,8 +33,6 @@ fun IngresoListScreen(
 ) {
     val ingresos by viewModel.ingresos.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.refresh() }
-
     Scaffold(
         containerColor = BackgroundDark,
         topBar = {

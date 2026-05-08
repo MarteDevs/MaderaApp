@@ -43,8 +43,6 @@ fun RequerimientoListScreen(
     val filtroMina by viewModel.filtroMina.collectAsState()
     val filtroFecha by viewModel.filtroFecha.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.refresh() }
-
     Scaffold(
         containerColor = BackgroundDark,
         topBar = {

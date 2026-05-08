@@ -31,6 +31,10 @@ class IngresoViewModel @Inject constructor(
     val pendientes: StateFlow<List<RequerimientoPendienteEntity>> = repository.pendientes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    init {
+        refresh()
+    }
+
     fun refresh() {
         viewModelScope.launch {
             repository.refreshHistorial()

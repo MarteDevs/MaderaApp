@@ -67,6 +67,7 @@ class RequerimientoViewModel @Inject constructor(
                 completados.value = list.count { it.estado == "COMPLETADO" }
             }
         }
+        refresh()
     }
 
     val minas = catalogRepository.getMinas()

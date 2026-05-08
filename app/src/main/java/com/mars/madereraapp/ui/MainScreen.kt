@@ -120,10 +120,6 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
     val parciales by viewModel.parciales.collectAsState()
     val completados by viewModel.completados.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.refresh()
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
