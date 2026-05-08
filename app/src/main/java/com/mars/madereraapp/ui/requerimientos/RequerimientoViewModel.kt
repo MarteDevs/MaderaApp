@@ -13,8 +13,10 @@ import com.mars.madereraapp.data.repository.RequerimientoRepository
 import com.mars.madereraapp.data.sync.UploadRequerimientoWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,8 +28,46 @@ class RequerimientoViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    val requerimientos: StateFlow<List<RequerimientoEntity>> = repository.requerimientos
+    // Raw list directly from DB
+    val requerimientosRaw: StateFlow<List<RequerimientoEntity>> = repository.requerimientos
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Filter states
+    val filtroEstado = MutableStateFlow("TODOS")
+    val filtroMina = MutableStateFlow("TODAS")
+    val filtroFecha = MutableStateFlow<String?>(null) // Format: "dd-MM-yyyy" or similar depending on DB
+
+    // Filtered list to display in Requerimientos Tab
+    val requerimientosFiltrados: StateFlow<List<RequerimientoEntity>> = combine(
+        requerimientosRaw,
+        filtroEstado,
+        filtroMina,
+        filtroFecha
+    ) { list, estado, mina, fecha ->
+        list.filter { req ->
+            val matchesEstado = if (estado == "TODOS") true else req.estado == estado
+            val matchesMina = if (mina == "TODAS") true else req.minaNombre == mina
+            val matchesFecha = if (fecha == null) true else req.fecha.contains(fecha)
+            matchesEstado && matchesMina && matchesFecha
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Metrics for Dashboard (based on raw list)
+    val totalRequerimientos = MutableStateFlow(0)
+    val pendientes = MutableStateFlow(0)
+    val parciales = MutableStateFlow(0)
+    val completados = MutableStateFlow(0)
+
+    init {
+        viewModelScope.launch {
+            requerimientosRaw.collect { list ->
+                totalRequerimientos.value = list.size
+                pendientes.value = list.count { it.estado == "PENDIENTE" }
+                parciales.value = list.count { it.estado == "PARCIAL" }
+                completados.value = list.count { it.estado == "COMPLETADO" }
+            }
+        }
+    }
 
     val minas = catalogRepository.getMinas()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -47,6 +87,7 @@ class RequerimientoViewModel @Inject constructor(
         }
     }
 
+    // Still kept for compatibility if needed elsewhere, though removed from UI
     fun crearRequerimiento(
         fecha: String,
         minaId: Int,

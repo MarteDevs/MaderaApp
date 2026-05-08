@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     true -> {
                         MaderaNavGraph(
                             navController = navController,
-                            startDestination = "dashboard",
+                            startDestination = "main",
                             sessionViewModel = sessionViewModel
                         )
                     }
