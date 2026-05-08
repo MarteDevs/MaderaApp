@@ -48,18 +48,33 @@ fun RequerimientoListScreen(
             }
         }
     ) { padding ->
-        if (requerimientos.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No hay requerimientos registrados.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(requerimientos) { req ->
-                    RequerimientoItem(req)
+        var isRefreshing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                coroutineScope.launch {
+                    isRefreshing = true
+                    viewModel.refresh()
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier.fillMaxSize().padding(padding)
+        ) {
+            if (requerimientos.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay requerimientos registrados.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(requerimientos) { req ->
+                        RequerimientoItem(req)
+                    }
                 }
             }
         }
@@ -87,7 +102,7 @@ fun RequerimientoItem(req: RequerimientoEntity) {
                     Icon(
                         Icons.Default.Sync,
                         contentDescription = "Sincronización pendiente",
-                        tint = Color.Gray,
+                        tint = com.mars.madereraapp.ui.theme.ColorPending,
                         modifier = Modifier.size(16.dp)
                     )
                 }

@@ -50,18 +50,33 @@ fun IngresoListScreen(
             }
         }
     ) { padding ->
-        if (ingresos.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No hay ingresos registrados.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(ingresos) { ing ->
-                    IngresoItem(ing)
+        var isRefreshing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                coroutineScope.launch {
+                    isRefreshing = true
+                    viewModel.refresh()
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier.fillMaxSize().padding(padding)
+        ) {
+            if (ingresos.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay ingresos registrados.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(ingresos) { ing ->
+                        IngresoItem(ing)
+                    }
                 }
             }
         }
@@ -89,7 +104,7 @@ fun IngresoItem(ing: IngresoEntity) {
                     Icon(
                         Icons.Default.Sync,
                         contentDescription = "Sincronización pendiente",
-                        tint = Color.Gray,
+                        tint = com.mars.madereraapp.ui.theme.ColorPending,
                         modifier = Modifier.size(16.dp)
                     )
                 }

@@ -86,6 +86,7 @@ fun NewIngresoScreen(
                 }
             }
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = {
                     val detalles = seleccionados.map { (id, cant) ->
@@ -105,6 +106,7 @@ fun NewIngresoScreen(
                             observacion = "Registro desde App Móvil",
                             detalles = detalles
                         )
+                        android.widget.Toast.makeText(context, "Ingreso registrado localmente. Sincronizando...", android.widget.Toast.LENGTH_SHORT).show()
                         onNavigateBack()
                     }
                 },

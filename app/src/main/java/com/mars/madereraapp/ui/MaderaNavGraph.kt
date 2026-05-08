@@ -85,35 +85,50 @@ fun DashboardScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Madera Poltand ERP") })
+            TopAppBar(
+                title = { Text("Madera Poltand ERP", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(
+            ElevatedCard(
                 onClick = onNavigateToRequerimientos,
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                shape = MaterialTheme.shapes.large
+                modifier = Modifier.fillMaxWidth().height(140.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primary),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
             ) {
-                Icon(Icons.Default.ListAlt, contentDescription = null, modifier = Modifier.size(32.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Gestionar Requerimientos", style = MaterialTheme.typography.titleLarge)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.ListAlt, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Gestionar Requerimientos", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Button(
+            ElevatedCard(
                 onClick = onNavigateToIngresos,
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                shape = MaterialTheme.shapes.large,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                modifier = Modifier.fillMaxWidth().height(140.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondary),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
             ) {
-                Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(32.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Registrar Ingresos", style = MaterialTheme.typography.titleLarge)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSecondary)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Registrar Ingresos", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSecondary)
+                    }
+                }
             }
         }
     }

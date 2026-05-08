@@ -98,6 +98,7 @@ fun NewRequerimientoScreen(
                 Text("Agregar Artículo (Demo)")
             }
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = {
                     if (selectedMina != null && detalles.isNotEmpty()) {
@@ -110,6 +111,7 @@ fun NewRequerimientoScreen(
                             supervisorNombre = supervisores.find { it.id == selectedSupervisor }?.nombre,
                             detalles = detalles.toList()
                         )
+                        android.widget.Toast.makeText(context, "Requerimiento guardado. Sincronización en proceso.", android.widget.Toast.LENGTH_SHORT).show()
                         onNavigateBack()
                     }
                 },
