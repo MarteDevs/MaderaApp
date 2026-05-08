@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.mars.madereraapp.data.local.MaderaDatabase
 import com.mars.madereraapp.data.local.dao.CatalogDao
+import com.mars.madereraapp.data.local.dao.RequerimientoDao
+import com.mars.madereraapp.data.local.dao.IngresoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
