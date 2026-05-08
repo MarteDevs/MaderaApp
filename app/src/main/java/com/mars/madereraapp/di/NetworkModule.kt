@@ -47,4 +47,22 @@ object NetworkModule {
     fun provideAuthApiService(retrofit: Retrofit): com.mars.madereraapp.data.remote.AuthApiService {
         return retrofit.create(com.mars.madereraapp.data.remote.AuthApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideCatalogApiService(retrofit: Retrofit): com.mars.madereraapp.data.remote.CatalogApiService {
+        return retrofit.create(com.mars.madereraapp.data.remote.CatalogApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRequerimientoApiService(retrofit: Retrofit): com.mars.madereraapp.data.remote.RequerimientoApiService {
+        return retrofit.create(com.mars.madereraapp.data.remote.RequerimientoApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIngresoApiService(retrofit: Retrofit): com.mars.madereraapp.data.remote.IngresoApiService {
+        return retrofit.create(com.mars.madereraapp.data.remote.IngresoApiService::class.java)
+    }
 }
