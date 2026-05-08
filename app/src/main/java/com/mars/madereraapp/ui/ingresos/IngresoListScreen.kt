@@ -81,7 +81,10 @@ fun IngresoListScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(ingresos) { ing ->
-                        IngresoCard(ing, onClick = { onNavigateToDetail(ing.localId.toInt()) })
+                        IngresoCard(ing, onClick = {
+                            val sid = ing.serverId
+                            if (sid != null) onNavigateToDetail(sid)
+                        })
                     }
                 }
             }

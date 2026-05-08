@@ -81,7 +81,10 @@ fun RequerimientoListScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(requerimientos) { req ->
-                        RequerimientoCard(req, onClick = { onNavigateToDetail(req.localId.toInt()) })
+                        RequerimientoCard(req, onClick = {
+                            val sid = req.serverId
+                            if (sid != null) onNavigateToDetail(sid)
+                        })
                     }
                 }
             }
@@ -91,12 +94,18 @@ fun RequerimientoListScreen(
 
 @Composable
 fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
+    val isClickable = req.serverId != null
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        enabled = isClickable,
+        modifier = Modifier.fillMaxWidth().then(
+            if (!isClickable) Modifier.then(Modifier) else Modifier
+        ),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        border = BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isClickable) SurfaceDark else SurfaceDark.copy(alpha = 0.6f)
+        ),
+        border = BorderStroke(1.dp, if (isClickable) BorderColor else BorderColor.copy(alpha = 0.4f)),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
