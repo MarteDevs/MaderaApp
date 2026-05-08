@@ -84,6 +84,11 @@ class RequerimientoViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
+            try {
+                catalogRepository.syncCatalogs()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             repository.fetchHistorial()
         }
     }
