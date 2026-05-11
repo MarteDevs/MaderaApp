@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.firstOrNull
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://192.168.1.44:3000/api/" // IP de la PC en la red local
+    private const val BASE_URL = "https://poltand.duckdns.org/api/"
 
     @Provides
     @Singleton
