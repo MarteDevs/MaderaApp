@@ -32,6 +32,7 @@ class IngresoRepository @Inject constructor(
     suspend fun refreshHistorial() {
         try {
             val remoteHistorial = apiService.getHistorial()
+            dao.clearSyncedIngresos()
             remoteHistorial.forEach { item ->
                 val entity = IngresoEntity(
                     serverId = item.id,

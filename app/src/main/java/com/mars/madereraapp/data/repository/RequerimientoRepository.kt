@@ -22,6 +22,7 @@ class RequerimientoRepository @Inject constructor(
     suspend fun fetchHistorial() {
         try {
             val remoteHistorial = apiService.getHistorial()
+            dao.clearSyncedRequerimientos()
             // Map remote to local entities
             // Note: This is a simple sync. In a real app we might want to be more careful.
             remoteHistorial.forEach { item ->

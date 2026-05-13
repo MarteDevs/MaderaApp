@@ -44,4 +44,7 @@ interface IngresoDao {
     
     @Query("DELETE FROM ingresos WHERE localId = :localId")
     suspend fun deleteIngreso(localId: Long)
+
+    @Query("DELETE FROM ingresos WHERE isPendingSync = 0")
+    suspend fun clearSyncedIngresos()
 }

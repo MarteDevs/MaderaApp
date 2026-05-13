@@ -33,4 +33,7 @@ interface RequerimientoDao {
     
     @Query("DELETE FROM requerimientos WHERE localId = :localId")
     suspend fun deleteRequerimiento(localId: Long)
+
+    @Query("DELETE FROM requerimientos WHERE isPendingSync = 0")
+    suspend fun clearSyncedRequerimientos()
 }
