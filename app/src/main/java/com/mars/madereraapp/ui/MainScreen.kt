@@ -28,8 +28,11 @@ import com.mars.madereraapp.ui.requerimientos.RequerimientoViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.mars.madereraapp.R
+import androidx.compose.ui.graphics.Brush
 import com.mars.madereraapp.ui.theme.*
 import com.mars.madereraapp.ui.components.*
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +56,9 @@ fun MainScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.logo_madera),
                                 contentDescription = null,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
@@ -122,7 +127,11 @@ fun MainScreen(
         Box(modifier = Modifier
             .padding(padding)
             .fillMaxSize()
-            .background(BackgroundDark)) {
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF000000), Color(0xFF131313))
+                )
+            )) {
             when (selectedTab) {
                 0 -> DashboardTab(requerimientoViewModel)
                 1 -> RequerimientoListScreen(onNavigateToDetail = onNavigateToRequerimientoDetalle, viewModel = requerimientoViewModel)
@@ -193,15 +202,16 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
             painter = painterResource(id = R.drawable.logo_madera),
             contentDescription = null,
             modifier = Modifier
-                .size(48.dp)
+                .size(64.dp)
                 .align(Alignment.CenterHorizontally)
-                .graphicsLayer(alpha = 0.5f)
+                .clip(RoundedCornerShape(12.dp))
+                .graphicsLayer(alpha = 0.3f)
         )
         
         Text(
-            text = "MADERA POLTAND v1.5  •  PREMIUM",
+            text = "INDUSTRIAL ERP • PREMIUM EDITION",
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary.copy(alpha = 0.3f),
+            color = TextSecondary.copy(alpha = 0.2f),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
@@ -215,7 +225,7 @@ fun DashboardMetricCard(
     color: Color
 ) {
     GlassCard(
-        modifier = modifier.height(130.dp)
+        modifier = modifier.height(140.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

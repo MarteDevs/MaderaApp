@@ -12,11 +12,16 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.animation.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.interaction.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,20 +62,29 @@ fun IngresoListScreen(
             }
         }
     ) { padding ->
+        val snackbarHostState = remember { SnackbarHostState() }
         var isRefreshing by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                scope.launch {
-                    isRefreshing = true
-                    viewModel.refresh()
-                    isRefreshing = false
-                }
-            },
-            modifier = Modifier.fillMaxSize().padding(padding)
-        ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { innerPadding ->
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        viewModel.refresh()
+                        isRefreshing = false
+                        snackbarHostState.showSnackbar(
+                            message = "✓ Datos de ingresos actualizados",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxSize().padding(padding)
+            ) {
             if (ingresos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -85,25 +99,40 @@ fun IngresoListScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(ingresos) { ing ->
-                        IngresoCard(ing, onClick = {
-                            val sid = ing.serverId
-                            if (sid != null) onNavigateToDetail(sid)
-                        })
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = true,
+                            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically { it / 2 }
+                        ) {
+                            IngresoCard(ing, onClick = {
+                                val sid = ing.serverId
+                                if (sid != null) onNavigateToDetail(sid)
+                            })
+                        }
                     }
                 }
             }
         }
     }
 }
+}
 
 @Composable
 fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
     val isClickable = ing.serverId != null
     
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f)
+
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (isClickable) Modifier.clickable { onClick() } else Modifier)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .then(if (isClickable) Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ) else Modifier)
     ) {
         Column {
             Row(

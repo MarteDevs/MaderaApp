@@ -23,8 +23,8 @@ val TextSecondary    = Color(0xFFD4C5AB)   // Muted sand/gold
 val TextOnPrimary    = Color(0xFF402D00)   // Dark contrast for amber
 
 // Glass Effects
-val GlassWhite       = Color(0x1AFFFFFF)   // 10% white for borders
-val GlassSurface     = Color(0x991B1B1C)   // Semi-transparent surface
+val GlassWhite       = Color(0x33FFFFFF)   // 20% white for borders
+val GlassSurface     = Color(0x4D1B1B1C)   // 30% semi-transparent surface
 
 // Status
 val ColorPending     = Color(0xFFFFBF00)   // Amber

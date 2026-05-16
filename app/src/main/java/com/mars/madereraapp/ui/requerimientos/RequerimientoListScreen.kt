@@ -1,10 +1,13 @@
 package com.mars.madereraapp.ui.requerimientos
 
 import android.app.DatePickerDialog
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,24 +20,21 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.local.entities.RequerimientoEntity
+import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.theme.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
-
-import androidx.compose.ui.draw.alpha
-import com.mars.madereraapp.ui.components.*
-import com.mars.madereraapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +49,19 @@ fun RequerimientoListScreen(
     val filtroMina by viewModel.filtroMina.collectAsState()
     val filtroFecha by viewModel.filtroFecha.collectAsState()
 
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            val dateStr = String.format("%04d-%02d-%02d", year, month + 1, day)
+            viewModel.filtroFecha.value = dateStr
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
     Scaffold(
         containerColor = BackgroundDark,
         topBar = {
@@ -57,82 +70,38 @@ fun RequerimientoListScreen(
                     title = { Text("REQUERIMIENTOS", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
                 )
-                // Barra de filtros
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Filtro Estado
-                    var estadoExpanded by remember { mutableStateOf(false) }
                     FilterButton(
-                        text = if (filtroEstado == "TODOS") "Estado" else filtroEstado,
-                        isActive = filtroEstado != "TODOS",
-                        onClick = { estadoExpanded = true }
-                    )
-                    DropdownMenu(
-                        expanded = estadoExpanded,
-                        onDismissRequest = { estadoExpanded = false },
-                        modifier = Modifier.width(150.dp).background(SurfaceContainer)
-                    ) {
-                        listOf("TODOS", "PENDIENTE", "PARCIAL", "COMPLETADO").forEach { est ->
-                            DropdownMenuItem(
-                                text = { Text(est, color = TextPrimary) },
-                                onClick = {
-                                    viewModel.filtroEstado.value = est
-                                    estadoExpanded = false
-                                }
-                            )
+                        text = "Todos",
+                        isActive = filtroEstado == "TODOS" && filtroMina == "TODAS" && filtroFecha == null,
+                        onClick = {
+                            viewModel.filtroEstado.value = "TODOS"
+                            viewModel.filtroMina.value = "TODAS"
+                            viewModel.filtroFecha.value = null
                         }
-                    }
-
-                    // Filtro Mina
-                    var minaExpanded by remember { mutableStateOf(false) }
-                    FilterButton(
-                        text = if (filtroMina == "TODAS") "Mina" else filtroMina,
-                        isActive = filtroMina != "TODAS",
-                        onClick = { minaExpanded = true }
                     )
-                    DropdownMenu(
-                        expanded = minaExpanded,
-                        onDismissRequest = { minaExpanded = false },
-                        modifier = Modifier.width(200.dp).background(SurfaceContainer)
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("TODAS", color = TextPrimary) },
-                            onClick = {
-                                viewModel.filtroMina.value = "TODAS"
-                                minaExpanded = false
-                            }
+                    
+                    FilterButton(
+                        text = "Pendientes",
+                        isActive = filtroEstado == "PENDIENTE",
+                        onClick = { viewModel.filtroEstado.value = if (filtroEstado == "PENDIENTE") "TODOS" else "PENDIENTE" }
+                    )
+
+                    minas.forEach { mina ->
+                        FilterButton(
+                            text = mina.nombre,
+                            isActive = filtroMina == mina.nombre,
+                            onClick = { viewModel.filtroMina.value = if (filtroMina == mina.nombre) "TODAS" else mina.nombre }
                         )
-                        minas.forEach { mina ->
-                            DropdownMenuItem(
-                                text = { Text(mina.nombre, color = TextPrimary) },
-                                onClick = {
-                                    viewModel.filtroMina.value = mina.nombre
-                                    minaExpanded = false
-                                }
-                            )
-                        }
                     }
-
-                    // Filtro Fecha
-                    val context = LocalContext.current
-                    val calendar = Calendar.getInstance()
-                    val datePickerDialog = DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            val m = (month + 1).toString().padStart(2, '0')
-                            val d = dayOfMonth.toString().padStart(2, '0')
-                            viewModel.filtroFecha.value = "$year-$m-$d"
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    )
 
                     FilterButton(
                         text = filtroFecha ?: "Fecha",
@@ -154,38 +123,53 @@ fun RequerimientoListScreen(
             }
         }
     ) { padding ->
+        val snackbarHostState = remember { SnackbarHostState() }
         var isRefreshing by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                scope.launch {
-                    isRefreshing = true
-                    viewModel.refresh()
-                    isRefreshing = false
-                }
-            },
-            modifier = Modifier.fillMaxSize().padding(padding)
-        ) {
-            if (requerimientos.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("SIN REQUERIMIENTOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                        Text("DESLIZA PARA ACTUALIZAR", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(0.4f))
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { innerPadding ->
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        viewModel.refresh()
+                        isRefreshing = false
+                        snackbarHostState.showSnackbar(
+                            message = "✓ Base de datos actualizada",
+                            duration = SnackbarDuration.Short
+                        )
                     }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(requerimientos) { req ->
-                        RequerimientoCard(req, onClick = {
-                            val sid = req.serverId
-                            if (sid != null) onNavigateToDetail(sid)
-                        })
+                },
+                modifier = Modifier.fillMaxSize().padding(padding)
+            ) {
+                if (requerimientos.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("SIN REQUERIMIENTOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+                            Text("DESLIZA PARA ACTUALIZAR", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(0.4f))
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(requerimientos) { req ->
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = fadeIn() + slideInVertically { it / 2 }
+                            ) {
+                                RequerimientoCard(req, onClick = {
+                                    val sid = req.serverId
+                                    if (sid != null) onNavigateToDetail(sid)
+                                })
+                            }
+                        }
                     }
                 }
             }
@@ -227,10 +211,19 @@ private fun FilterButton(
 fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
     val isClickable = req.serverId != null
     
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f)
+
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (isClickable) Modifier.clickable { onClick() } else Modifier)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .then(if (isClickable) Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ) else Modifier)
             .then(if (!isClickable) Modifier.alpha(0.6f) else Modifier)
     ) {
         Column {
@@ -283,4 +276,3 @@ fun InfoRow(icon: String, text: String) {
         Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
     }
 }
-

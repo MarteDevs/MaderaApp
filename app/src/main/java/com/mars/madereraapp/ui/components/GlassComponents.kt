@@ -23,16 +23,16 @@ fun GlassCard(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(GlassSurface)
             .border(
                 width = 1.dp,
                 brush = Brush.verticalGradient(
-                    colors = listOf(GlassWhite, Color.Transparent)
+                    colors = listOf(GlassWhite, Color.Transparent, Color.Transparent)
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(24.dp)
             )
-            .padding(16.dp)
+            .padding(20.dp)
     ) {
         Column {
             content()
