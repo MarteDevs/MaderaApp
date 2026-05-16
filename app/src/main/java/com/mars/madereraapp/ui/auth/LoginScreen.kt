@@ -89,7 +89,7 @@ fun LoginScreen(
                 // Campo Usuario
                 OutlinedTextField(
                     value = viewModel.usuario,
-                    onValueChange = { viewModel.usuario = it },
+                    onValueChange = { viewModel.usuario = it.uppercase() },
                     label = { Text("USUARIO", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -110,7 +110,7 @@ fun LoginScreen(
                 // Campo Contraseña
                 OutlinedTextField(
                     value = viewModel.clave,
-                    onValueChange = { viewModel.clave = it },
+                    onValueChange = { viewModel.clave = it.uppercase() },
                     label = { Text("CONTRASEÑA", style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,

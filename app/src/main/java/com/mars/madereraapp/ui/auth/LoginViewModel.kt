@@ -40,7 +40,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             cargando = true
             error = null
-            val result = repository.login(usuario, clave)
+            val result = repository.login(usuario.trim().uppercase(), clave.trim().uppercase())
             if (result.isSuccess) {
                 // Iniciar sincronización de catálogos al iniciar sesión
                 triggerSync()
