@@ -7,24 +7,25 @@ import androidx.compose.ui.graphics.Color
 
 // Único esquema de colores — Dark Mode Premium
 private val AppColorScheme = darkColorScheme(
-    primary            = PrimaryBlue,
+    primary            = PrimaryAmber,
     onPrimary          = TextOnPrimary,
-    primaryContainer   = PrimaryDark,
-    onPrimaryContainer = TextPrimary,
-    secondary          = SecondaryGreen,
+    primaryContainer   = PrimaryGold,
+    onPrimaryContainer = TextOnPrimary,
+    secondary          = PrimaryGold,
     onSecondary        = TextOnPrimary,
-    secondaryContainer = Color(0xFF064E3B),  // Emerald 900
+    secondaryContainer = SurfaceContainer,
     onSecondaryContainer = TextPrimary,
     background         = BackgroundDark,
     onBackground       = TextPrimary,
     surface            = SurfaceDark,
     onSurface          = TextPrimary,
-    surfaceVariant     = SurfaceVariant,
+    surfaceVariant     = SurfaceContainer,
     onSurfaceVariant   = TextSecondary,
-    outline            = BorderColor,
+    outline            = GlassWhite,
     error              = ColorError,
     onError            = TextOnPrimary,
 )
+
 
 @Composable
 fun MadereraAppTheme(content: @Composable () -> Unit) {

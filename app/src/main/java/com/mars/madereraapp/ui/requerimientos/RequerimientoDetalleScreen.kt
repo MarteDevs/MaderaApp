@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.remote.RequerimientoDetalleItem
 import com.mars.madereraapp.ui.theme.*
 import kotlinx.coroutines.launch
+
+import com.mars.madereraapp.ui.components.*
+import com.mars.madereraapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,13 +44,13 @@ fun RequerimientoDetalleScreen(
         containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text("Detalle del Requerimiento", fontWeight = FontWeight.SemiBold, color = TextPrimary) },
+                title = { Text("DETALLE DE REQUERIMIENTO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = PrimaryAmber)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         }
     ) { padding ->
@@ -66,18 +70,18 @@ fun RequerimientoDetalleScreen(
         ) {
             when {
                 isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryBlue)
+                    CircularProgressIndicator(color = PrimaryAmber)
                 }
                 error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(error!!, color = ColorError, fontSize = 14.sp)
+                    Text(error!!, color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
                 }
                 detalles.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Sin artículos encontrados", color = TextSecondary)
+                    Text("SIN ARTÍCULOS ENCONTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
                 }
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(detalles) { item -> DetalleArticuloCard(item) }
                 }
@@ -90,37 +94,43 @@ fun RequerimientoDetalleScreen(
 private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
     val progreso = if (item.pedido > 0) (item.entregado / item.pedido).toFloat().coerceIn(0f, 1f) else 0f
     val colorBarra = when {
-        progreso >= 1f   -> StatusCompletado
-        progreso > 0f    -> StatusParcial
-        else             -> StatusPendiente
+        progreso >= 1f   -> ColorApproved
+        progreso > 0f    -> ColorPending
+        else             -> ColorPending
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        border = BorderStroke(1.dp, BorderColor),
-        elevation = CardDefaults.cardElevation(0.dp)
+    GlassCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(item.articulo, fontWeight = FontWeight.SemiBold, color = TextPrimary, fontSize = 15.sp)
-            Text("Proveedor: ${item.proveedor}", color = TextSecondary, fontSize = 12.sp)
+        Column {
+            Text(item.articulo.uppercase(), style = MaterialTheme.typography.titleSmall, color = PrimaryAmber, fontWeight = FontWeight.Bold)
+            Text("PROVEEDOR: ${item.proveedor}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Barra de progreso visual
+            // Barra de progreso visual premium
             LinearProgressIndicator(
                 progress = { progreso },
-                modifier = Modifier.fillMaxWidth().height(6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
                 color = colorBarra,
-                trackColor = SurfaceVariant
+                trackColor = GlassWhite
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricChip("Pedido", item.pedido.toInt().toString(), TextSecondary)
-                MetricChip("Entregado", item.entregado.toInt().toString(), StatusCompletado)
-                MetricChip("Faltante", item.faltante.toInt().toString(), if (item.faltante > 0) StatusParcial else StatusCompletado)
+                MetricChip("PEDIDO", item.pedido.toInt().toString(), TextSecondary)
+                MetricChip("ENTREGADO", item.entregado.toInt().toString(), ColorApproved)
+                
+                val faltante = item.faltante.toInt()
+                if (faltante < 0) {
+                    MetricChip("EXTRA", (faltante * -1).toString(), ColorApproved)
+                } else {
+                    MetricChip("FALTANTE", faltante.toString(), if (faltante > 0) ColorPending else ColorApproved)
+                }
             }
         }
     }
@@ -129,7 +139,8 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
 @Composable
 private fun MetricChip(label: String, value: String, valueColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = valueColor, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text(label, color = TextSecondary, fontSize = 11.sp)
+        Text(value, color = valueColor, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }
+

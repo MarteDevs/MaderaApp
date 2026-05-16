@@ -3,33 +3,36 @@ package com.mars.madereraapp.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ─────────────────────────────────────────────────
-//  Dark Mode Premium Palette — Madera Poltand ERP
+//  Industrial Excellence Palette — Madera Poltand
 // ─────────────────────────────────────────────────
 
-// Backgrounds
-val BackgroundDark   = Color(0xFF0A0F1E)   // Azul noche profundo
-val SurfaceDark      = Color(0xFF111827)   // Gray 900 — tarjetas
-val SurfaceVariant   = Color(0xFF1F2937)   // Gray 800 — inputs
+// Backgrounds & Surfaces
+val BackgroundDark   = Color(0xFF131313)   // Deep charcoal
+val SurfaceDark      = Color(0xFF1B1B1C)   // Surface Low
+val SurfaceContainer = Color(0xFF202020)   // Surface Normal
+val SurfaceHigh      = Color(0xFF2A2A2A)   // Surface High
 
 // Brand / Accents
-val PrimaryBlue      = Color(0xFF3B82F6)   // Blue 500
-val PrimaryDark      = Color(0xFF1D4ED8)   // Blue 700 — pressed/hover
-val SecondaryGreen   = Color(0xFF10B981)   // Emerald 500
+val PrimaryAmber     = Color(0xFFFFBF00)   // Industrial Amber
+val PrimaryGold      = Color(0xFFD4AF37)   // Premium Gold
+val AccentAmber      = Color(0xFFFFE2AB)   // Light Amber
 
 // Text
-val TextPrimary      = Color(0xFFF9FAFB)   // Gray 50 — texto principal
-val TextSecondary    = Color(0xFF9CA3AF)   // Gray 400 — subtítulos
-val TextOnPrimary    = Color(0xFFFFFFFF)
+val TextPrimary      = Color(0xFFE5E2E1)   // Light gray
+val TextSecondary    = Color(0xFFD4C5AB)   // Muted sand/gold
+val TextOnPrimary    = Color(0xFF402D00)   // Dark contrast for amber
 
-// Borders
-val BorderColor      = Color(0xFF374151)   // Gray 700 — borde sutil
+// Glass Effects
+val GlassWhite       = Color(0x1AFFFFFF)   // 10% white for borders
+val GlassSurface     = Color(0x991B1B1C)   // Semi-transparent surface
 
 // Status
-val ColorPending     = Color(0xFFF59E0B)   // Amber 500 — sync pendiente
-val ColorSynced      = Color(0xFF10B981)   // Emerald 500 — sincronizado
-val ColorError       = Color(0xFFEF4444)   // Red 500
+val ColorPending     = Color(0xFFFFBF00)   // Amber
+val ColorApproved    = Color(0xFF81C784)   // Soft green
+val ColorRejected    = Color(0xFFE57373)   // Soft red
+val ColorError       = Color(0xFFFFB4AB)   // Red 500
 
-// Status Chips
-val StatusPendiente  = Color(0xFF3B82F6)   // Blue
-val StatusParcial    = Color(0xFFF59E0B)   // Amber
-val StatusCompletado = Color(0xFF10B981)   // Emerald
+// Status Chips (for backwards compatibility if needed)
+val StatusPendiente  = PrimaryAmber
+val StatusParcial    = Color(0xFFFBC02D)   // Darker amber
+val StatusCompletado = ColorApproved

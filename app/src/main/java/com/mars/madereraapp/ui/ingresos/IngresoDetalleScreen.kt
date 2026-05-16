@@ -22,6 +22,9 @@ import com.mars.madereraapp.data.remote.IngresoDetalleItem
 import com.mars.madereraapp.ui.theme.*
 import kotlinx.coroutines.launch
 
+import com.mars.madereraapp.ui.components.*
+import com.mars.madereraapp.ui.theme.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngresoDetalleScreen(
@@ -39,13 +42,13 @@ fun IngresoDetalleScreen(
         containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text("Detalle del Ingreso", fontWeight = FontWeight.SemiBold, color = TextPrimary) },
+                title = { Text("DETALLE DE INGRESO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = PrimaryAmber)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         }
     ) { padding ->
@@ -65,18 +68,18 @@ fun IngresoDetalleScreen(
         ) {
             when {
                 isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryBlue)
+                    CircularProgressIndicator(color = PrimaryAmber)
                 }
                 error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(error!!, color = ColorError, fontSize = 14.sp)
+                    Text(error!!, color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
                 }
                 detalles.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Sin artículos en este ingreso", color = TextSecondary)
+                    Text("SIN ARTÍCULOS EN ESTE INGRESO", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
                 }
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(detalles) { item ->
                         IngresoDetalleCard(item)
@@ -89,31 +92,28 @@ fun IngresoDetalleScreen(
 
 @Composable
 private fun IngresoDetalleCard(item: IngresoDetalleItem) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        border = BorderStroke(1.dp, BorderColor),
-        elevation = CardDefaults.cardElevation(0.dp)
+    GlassCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(item.articulo, fontWeight = FontWeight.SemiBold, color = TextPrimary, fontSize = 15.sp)
-                Text("Proveedor: ${item.proveedor}", color = TextSecondary, fontSize = 12.sp)
+                Text(item.articulo.uppercase(), style = MaterialTheme.typography.titleSmall, color = PrimaryAmber, fontWeight = FontWeight.Bold)
+                Text("PROVEEDOR: ${item.proveedor}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     "${item.cantidad_entregada.toInt()}",
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    color = SecondaryGreen
+                    color = ColorApproved
                 )
-                Text("entregado", color = TextSecondary, fontSize = 11.sp)
+                Text("ENTREGADO", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
             }
         }
     }
 }
+

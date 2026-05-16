@@ -1,6 +1,7 @@
 package com.mars.madereraapp.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,9 @@ import com.mars.madereraapp.ui.requerimientos.RequerimientoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoViewModel
 import com.mars.madereraapp.ui.theme.*
 
+import com.mars.madereraapp.ui.components.*
+import com.mars.madereraapp.ui.theme.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -40,15 +44,15 @@ fun MainScreen(
     Scaffold(
         containerColor = BackgroundDark,
         topBar = {
-            if (selectedTab == 0) { // Dashboard tiene su propio TopBar especial
+            if (selectedTab == 0) {
                 TopAppBar(
                     title = {
                         Column {
-                            Text("Madera Poltand", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = TextPrimary)
-                            Text("Sistema ERP", fontSize = 12.sp, color = TextSecondary)
+                            Text("MADERA POLTAND", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                            Text("INDUSTRIAL SYSTEM", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark),
                     actions = {
                         IconButton(onClick = onLogout) {
                             Icon(Icons.Default.Logout, contentDescription = "Cerrar Sesión", tint = TextSecondary)
@@ -59,8 +63,9 @@ fun MainScreen(
         },
         bottomBar = {
             NavigationBar(
-                containerColor = SurfaceDark,
-                tonalElevation = 8.dp
+                containerColor = BackgroundDark,
+                tonalElevation = 0.dp,
+                modifier = Modifier.border(1.dp, GlassWhite, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
@@ -68,11 +73,11 @@ fun MainScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryBlue,
-                        selectedTextColor = PrimaryBlue,
+                        selectedIconColor = PrimaryAmber,
+                        selectedTextColor = PrimaryAmber,
                         unselectedIconColor = TextSecondary,
                         unselectedTextColor = TextSecondary,
-                        indicatorColor = SurfaceVariant
+                        indicatorColor = GlassWhite
                     )
                 )
                 NavigationBarItem(
@@ -81,11 +86,11 @@ fun MainScreen(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryBlue,
-                        selectedTextColor = PrimaryBlue,
+                        selectedIconColor = PrimaryAmber,
+                        selectedTextColor = PrimaryAmber,
                         unselectedIconColor = TextSecondary,
                         unselectedTextColor = TextSecondary,
-                        indicatorColor = SurfaceVariant
+                        indicatorColor = GlassWhite
                     )
                 )
                 NavigationBarItem(
@@ -94,17 +99,20 @@ fun MainScreen(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryBlue,
-                        selectedTextColor = PrimaryBlue,
+                        selectedIconColor = PrimaryAmber,
+                        selectedTextColor = PrimaryAmber,
                         unselectedIconColor = TextSecondary,
                         unselectedTextColor = TextSecondary,
-                        indicatorColor = SurfaceVariant
+                        indicatorColor = GlassWhite
                     )
                 )
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
+        Box(modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()
+            .background(BackgroundDark)) {
             when (selectedTab) {
                 0 -> DashboardTab(requerimientoViewModel)
                 1 -> RequerimientoListScreen(onNavigateToDetail = onNavigateToRequerimientoDetalle, viewModel = requerimientoViewModel)
@@ -124,15 +132,13 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
-            "Resumen General",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextSecondary,
-            modifier = Modifier.padding(bottom = 8.dp)
+            "RESUMEN OPERATIVO",
+            style = MaterialTheme.typography.labelMedium,
+            color = TextSecondary
         )
 
         Row(
@@ -143,13 +149,13 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
                 modifier = Modifier.weight(1f),
                 title = "Total Requerimientos",
                 value = total.toString(),
-                color = PrimaryBlue
+                color = PrimaryAmber
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
                 title = "Pendientes",
                 value = pendientes.toString(),
-                color = StatusPendiente
+                color = ColorPending
             )
         }
 
@@ -167,16 +173,16 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
                 modifier = Modifier.weight(1f),
                 title = "Completados",
                 value = completados.toString(),
-                color = StatusCompletado
+                color = ColorApproved
             )
         }
 
         Spacer(modifier = Modifier.weight(1f))
         
         Text(
-            text = "v1.0  •  Offline First",
-            fontSize = 11.sp,
-            color = TextSecondary.copy(alpha = 0.5f),
+            text = "MADERA POLTAND v1.5  •  PREMIUM",
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary.copy(alpha = 0.3f),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
@@ -189,30 +195,24 @@ fun DashboardMetricCard(
     value: String,
     color: Color
 ) {
-    Card(
-        modifier = modifier.height(110.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        elevation = CardDefaults.cardElevation(0.dp)
+    GlassCard(
+        modifier = modifier.height(130.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                title,
-                fontSize = 13.sp,
-                color = TextSecondary,
-                lineHeight = 16.sp
+                title.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary
             )
             Text(
                 value,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineLarge,
                 color = color
             )
         }
     }
 }
+

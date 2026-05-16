@@ -1,6 +1,7 @@
 package com.mars.madereraapp.ui.ingresos
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +25,9 @@ import com.mars.madereraapp.data.local.entities.IngresoEntity
 import com.mars.madereraapp.ui.theme.*
 import kotlinx.coroutines.launch
 
+import com.mars.madereraapp.ui.components.*
+import com.mars.madereraapp.ui.theme.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngresoListScreen(
@@ -37,17 +41,19 @@ fun IngresoListScreen(
         containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text("Ingresos de Stock", fontWeight = FontWeight.SemiBold, color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                title = { Text("INGRESOS DE STOCK", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreate,
-                containerColor = SecondaryGreen,
-                shape = RoundedCornerShape(16.dp)
+                containerColor = PrimaryAmber,
+                contentColor = TextOnPrimary,
+                shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Registrar Ingreso", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = "Registrar Ingreso")
             }
         }
     ) { padding ->
@@ -68,15 +74,15 @@ fun IngresoListScreen(
             if (ingresos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Sin ingresos registrados", color = TextSecondary, fontSize = 16.sp)
-                        Text("Desliza para actualizar", color = TextSecondary.copy(0.5f), fontSize = 12.sp)
+                        Text("SIN INGRESOS REGISTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+                        Text("DESLIZA PARA ACTUALIZAR", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(0.4f))
                     }
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(ingresos) { ing ->
                         IngresoCard(ing, onClick = {
@@ -92,53 +98,48 @@ fun IngresoListScreen(
 
 @Composable
 fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        border = BorderStroke(1.dp, BorderColor),
-        elevation = CardDefaults.cardElevation(0.dp)
+    val isClickable = ing.serverId != null
+    
+    GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (isClickable) Modifier.clickable { onClick() } else Modifier)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = ing.codigo_ingreso ?: "Pendiente sync",
+                    text = ing.codigo_ingreso ?: "PENDIENTE SYNC",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryAmber
                 )
                 if (ing.isPendingSync) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Sync, contentDescription = null, tint = ColorPending, modifier = Modifier.size(14.dp))
-                        Text("Sync pendiente", color = ColorPending, fontSize = 11.sp)
-                    }
+                    StatusBadge("PENDIENTE", ColorPending)
                 } else {
-                    Surface(
-                        color = StatusCompletado.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            "Sincronizado",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                            color = StatusCompletado,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    StatusBadge("SINCRONIZADO", ColorApproved)
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("📅  ${ing.fecha}", color = TextSecondary, fontSize = 13.sp)
-            ing.viaje?.let { Text("🚛  Viaje: $it", color = TextSecondary, fontSize = 13.sp) }
-            ing.vale?.let { Text("🧾  Vale: $it", color = TextSecondary, fontSize = 13.sp) }
+            
+            Divider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
+            
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                InfoRow(icon = "📅", text = ing.fecha)
+                ing.viaje?.let { InfoRow(icon = "🚛", text = "Viaje: $it") }
+                ing.vale?.let { InfoRow(icon = "🧾", text = "Vale: $it") }
+            }
         }
     }
 }
+
+@Composable
+fun InfoRow(icon: String, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(icon, modifier = Modifier.width(24.dp), fontSize = 14.sp)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+    }
+}
+
