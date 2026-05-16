@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,10 +25,11 @@ import com.mars.madereraapp.ui.auth.SessionViewModel
 import com.mars.madereraapp.ui.ingresos.IngresoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoViewModel
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.mars.madereraapp.R
 import com.mars.madereraapp.ui.theme.*
-
 import com.mars.madereraapp.ui.components.*
-import com.mars.madereraapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,9 +49,17 @@ fun MainScreen(
             if (selectedTab == 0) {
                 TopAppBar(
                     title = {
-                        Column {
-                            Text("MADERA POLTAND", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
-                            Text("INDUSTRIAL SYSTEM", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.logo_madera),
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("MADERA POLTAND", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                                Text("INDUSTRIAL SYSTEM", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark),
@@ -178,6 +188,15 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
         }
 
         Spacer(modifier = Modifier.weight(1f))
+        
+        Image(
+            painter = painterResource(id = R.drawable.logo_madera),
+            contentDescription = null,
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.CenterHorizontally)
+                .graphicsLayer(alpha = 0.5f)
+        )
         
         Text(
             text = "MADERA POLTAND v1.5  •  PREMIUM",

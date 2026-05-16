@@ -26,6 +26,9 @@ import com.mars.madereraapp.ui.theme.BackgroundDark
 import com.mars.madereraapp.ui.theme.SurfaceDark
 import com.mars.madereraapp.ui.theme.TextOnPrimary
 import com.mars.madereraapp.ui.theme.TextSecondary
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.mars.madereraapp.R
 
 import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.theme.*
@@ -60,24 +63,12 @@ fun LoginScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo industrial
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(PrimaryAmber, PrimaryGold)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "MP",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = TextOnPrimary
-                )
-            }
+            // Logo oficial
+            Image(
+                painter = painterResource(id = R.drawable.logo_madera),
+                contentDescription = "Logo Madera Poltand",
+                modifier = Modifier.size(120.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
