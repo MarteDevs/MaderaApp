@@ -1,8 +1,10 @@
 package com.mars.madereraapp.ui.auth
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -15,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -22,16 +26,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mars.madereraapp.ui.theme.BackgroundDark
-import com.mars.madereraapp.ui.theme.SurfaceDark
-import com.mars.madereraapp.ui.theme.TextOnPrimary
-import com.mars.madereraapp.ui.theme.TextSecondary
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
 import com.mars.madereraapp.R
-
 import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.theme.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
@@ -39,9 +37,23 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    var shakeOffset by remember { mutableStateOf(0f) }
 
     LaunchedEffect(Unit) {
         viewModel.loginSuccess.collect { onLoginSuccess() }
+    }
+
+    // Animación de shake para error
+    LaunchedEffect(viewModel.error) {
+        if (viewModel.error != null) {
+            repeat(6) {
+                shakeOffset = 10f
+                delay(50)
+                shakeOffset = -10f
+                delay(50)
+            }
+            shakeOffset = 0f
+        }
     }
 
     Box(
@@ -49,10 +61,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF000000),
-                        Color(0xFF131313)
-                    )
+                    colors = listOf(Color(0xFF000000), Color(0xFF131313))
                 )
             )
     ) {
@@ -60,14 +69,17 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Center)
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 32.dp)
+                .graphicsLayer(translationX = shakeOffset),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo oficial
+            // Logo oficial animado
             Image(
                 painter = painterResource(id = R.drawable.logo_madera),
                 contentDescription = "Logo Madera Poltand",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier
+                    .size(120.dp)
+                    .animateContentSize()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -85,89 +97,98 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 4.dp, bottom = 48.dp)
             )
 
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                // Campo Usuario
-                OutlinedTextField(
-                    value = viewModel.usuario,
-                    onValueChange = { viewModel.usuario = it.uppercase() },
-                    label = { Text("USUARIO", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryAmber,
-                        unfocusedBorderColor = GlassWhite,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = PrimaryAmber,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Campo Contraseña
-                OutlinedTextField(
-                    value = viewModel.clave,
-                    onValueChange = { viewModel.clave = it.uppercase() },
-                    label = { Text("CONTRASEÑA", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = icon, contentDescription = null, tint = TextSecondary)
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryAmber,
-                        unfocusedBorderColor = GlassWhite,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = PrimaryAmber,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    )
-                )
-
-                // Error
-                if (viewModel.error != null) {
-                    Text(
-                        text = viewModel.error!!,
-                        color = ColorRejected,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 12.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Botón de inicio de sesión industrial
-                IndustrialButton(
-                    onClick = { viewModel.onLoginClick() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !viewModel.cargando
-                ) {
-                    if (viewModel.cargando) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = TextOnPrimary,
-                            strokeWidth = 3.dp
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy))
+            ) {
+                Column {
+                    // Campo Usuario
+                    OutlinedTextField(
+                        value = viewModel.usuario,
+                        onValueChange = { viewModel.usuario = it.uppercase() },
+                        label = { Text("USUARIO", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryAmber,
+                            unfocusedBorderColor = GlassWhite,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = PrimaryAmber,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
                         )
-                    } else {
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Campo Contraseña
+                    OutlinedTextField(
+                        value = viewModel.clave,
+                        onValueChange = { viewModel.clave = it.uppercase() },
+                        label = { Text("CONTRASEÑA", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(imageVector = icon, contentDescription = null, tint = TextSecondary)
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryAmber,
+                            unfocusedBorderColor = GlassWhite,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = PrimaryAmber,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+
+                    // Error Animado
+                    AnimatedVisibility(
+                        visible = viewModel.error != null,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
                         Text(
-                            text = "ACCEDER AL SISTEMA",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
+                            text = viewModel.error ?: "",
+                            color = ColorRejected,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(top = 12.dp)
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Botón de inicio de sesión industrial
+                    IndustrialButton(
+                        onClick = { viewModel.onLoginClick() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !viewModel.cargando
+                    ) {
+                        if (viewModel.cargando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = TextOnPrimary,
+                                strokeWidth = 3.dp
+                            )
+                        } else {
+                            Text(
+                                text = "ACCEDER AL SISTEMA",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-

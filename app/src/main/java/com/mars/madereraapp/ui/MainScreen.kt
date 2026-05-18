@@ -1,5 +1,8 @@
 package com.mars.madereraapp.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -14,25 +17,22 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mars.madereraapp.R
 import com.mars.madereraapp.ui.auth.SessionViewModel
+import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.ingresos.IngresoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoViewModel
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import com.mars.madereraapp.R
-import androidx.compose.ui.graphics.Brush
 import com.mars.madereraapp.ui.theme.*
-import com.mars.madereraapp.ui.components.*
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,45 +82,36 @@ fun MainScreen(
                 tonalElevation = 0.dp,
                 modifier = Modifier.border(1.dp, GlassWhite, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryAmber,
-                        selectedTextColor = PrimaryAmber,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary,
-                        indicatorColor = GlassWhite
-                    )
+                val tabs = listOf(
+                    Triple(0, Icons.Default.Home, "Inicio"),
+                    Triple(1, Icons.Default.ListAlt, "Reqs"),
+                    Triple(2, Icons.Default.Inventory, "Ingresos")
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.ListAlt, contentDescription = "Reqs") },
-                    label = { Text("Reqs") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryAmber,
-                        selectedTextColor = PrimaryAmber,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary,
-                        indicatorColor = GlassWhite
+
+                tabs.forEach { (index, icon, label) ->
+                    val isSelected = selectedTab == index
+                    val iconScale by animateFloatAsState(if (isSelected) 1.2f else 1f)
+                    
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                icon, 
+                                contentDescription = label,
+                                modifier = Modifier.graphicsLayer(scaleX = iconScale, scaleY = iconScale)
+                            ) 
+                        },
+                        label = { Text(label) },
+                        selected = isSelected,
+                        onClick = { selectedTab = index },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryAmber,
+                            selectedTextColor = PrimaryAmber,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary,
+                            indicatorColor = GlassWhite
+                        )
                     )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Ingresos") },
-                    label = { Text("Ingresos") },
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryAmber,
-                        selectedTextColor = PrimaryAmber,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary,
-                        indicatorColor = GlassWhite
-                    )
-                )
+                }
             }
         }
     ) { padding ->
@@ -132,10 +123,23 @@ fun MainScreen(
                     colors = listOf(Color(0xFF000000), Color(0xFF131313))
                 )
             )) {
-            when (selectedTab) {
-                0 -> DashboardTab(requerimientoViewModel)
-                1 -> RequerimientoListScreen(onNavigateToDetail = onNavigateToRequerimientoDetalle, viewModel = requerimientoViewModel)
-                2 -> IngresoListScreen(onNavigateToCreate = onNavigateToNuevoIngreso, onNavigateToDetail = onNavigateToIngresoDetalle)
+            
+            AnimatedContent(
+                targetState = selectedTab,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
+                    } else {
+                        (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
+                    }.using(SizeTransform(clip = false))
+                },
+                label = "TabTransition"
+            ) { targetTab ->
+                when (targetTab) {
+                    0 -> DashboardTab(requerimientoViewModel)
+                    1 -> RequerimientoListScreen(onNavigateToDetail = onNavigateToRequerimientoDetalle, viewModel = requerimientoViewModel)
+                    2 -> IngresoListScreen(onNavigateToCreate = onNavigateToNuevoIngreso, onNavigateToDetail = onNavigateToIngresoDetalle)
+                }
             }
         }
     }
@@ -147,6 +151,9 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
     val pendientes by viewModel.pendientes.collectAsState()
     val parciales by viewModel.parciales.collectAsState()
     val completados by viewModel.completados.collectAsState()
+
+    var startAnimations by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { startAnimations = true }
 
     Column(
         modifier = Modifier
@@ -160,40 +167,50 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
             color = TextSecondary
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        AnimatedVisibility(
+            visible = startAnimations,
+            enter = fadeIn(animationSpec = tween(600)) + slideInVertically(initialOffsetY = { 40 })
         ) {
-            DashboardMetricCard(
-                modifier = Modifier.weight(1f),
-                title = "Total Requerimientos",
-                value = total.toString(),
-                color = PrimaryAmber
-            )
-            DashboardMetricCard(
-                modifier = Modifier.weight(1f),
-                title = "Pendientes",
-                value = pendientes.toString(),
-                color = ColorPending
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                DashboardMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Total Requerimientos",
+                    value = total,
+                    color = PrimaryAmber
+                )
+                DashboardMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Pendientes",
+                    value = pendientes,
+                    color = ColorPending
+                )
+            }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        AnimatedVisibility(
+            visible = startAnimations,
+            enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) + slideInVertically(initialOffsetY = { 40 })
         ) {
-            DashboardMetricCard(
-                modifier = Modifier.weight(1f),
-                title = "Atención Parcial",
-                value = parciales.toString(),
-                color = StatusParcial
-            )
-            DashboardMetricCard(
-                modifier = Modifier.weight(1f),
-                title = "Completados",
-                value = completados.toString(),
-                color = ColorApproved
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                DashboardMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Atención Parcial",
+                    value = parciales,
+                    color = StatusParcial
+                )
+                DashboardMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Completados",
+                    value = completados,
+                    color = ColorApproved
+                )
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -221,9 +238,14 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
 fun DashboardMetricCard(
     modifier: Modifier = Modifier,
     title: String,
-    value: String,
+    value: Int,
     color: Color
 ) {
+    val animatedValue by animateIntAsState(
+        targetValue = value,
+        animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing)
+    )
+
     GlassCard(
         modifier = modifier.height(140.dp)
     ) {
@@ -237,11 +259,10 @@ fun DashboardMetricCard(
                 color = TextSecondary
             )
             Text(
-                value,
+                animatedValue.toString(),
                 style = MaterialTheme.typography.headlineLarge,
                 color = color
             )
         }
     }
 }
-

@@ -1,5 +1,7 @@
 package com.mars.madereraapp.ui.requerimientos
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,8 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,11 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.remote.RequerimientoDetalleItem
-import com.mars.madereraapp.ui.theme.*
-import kotlinx.coroutines.launch
-
 import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.theme.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,33 +55,44 @@ fun RequerimientoDetalleScreen(
         var isRefreshing by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                scope.launch {
-                    isRefreshing = true
-                    viewModel.load(requerimientoId)
-                    isRefreshing = false
-                }
+        AnimatedContent(
+            targetState = Triple(isLoading, error, detalles),
+            transitionSpec = {
+                fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
             },
-            modifier = Modifier.fillMaxSize().padding(padding)
-        ) {
-            when {
-                isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryAmber)
-                }
-                error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(error!!, color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
-                }
-                detalles.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("SIN ARTÍCULOS ENCONTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                }
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(detalles) { item -> DetalleArticuloCard(item) }
+            label = "StateTransition",
+            modifier = Modifier.padding(padding)
+        ) { (loading, err, itemsList) ->
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        viewModel.load(requerimientoId)
+                        isRefreshing = false
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when {
+                    loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = PrimaryAmber)
+                    }
+                    err != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(err ?: "Error desconocido", color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    itemsList.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("SIN ARTÍCULOS ENCONTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+                    }
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(itemsList) { item -> 
+                            DetalleArticuloCard(item) 
+                        }
+                    }
                 }
             }
         }
@@ -92,11 +101,18 @@ fun RequerimientoDetalleScreen(
 
 @Composable
 private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
-    val progreso = if (item.pedido > 0) (item.entregado / item.pedido).toFloat().coerceIn(0f, 1f) else 0f
+    val targetProgreso = if (item.pedido > 0) (item.entregado / item.pedido).toFloat().coerceIn(0f, 1f) else 0f
+    
+    val animatedProgreso by animateFloatAsState(
+        targetValue = targetProgreso,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "ProgressBarAnimation"
+    )
+
     val colorBarra = when {
-        progreso >= 1f   -> ColorApproved
-        progreso > 0f    -> ColorPending
-        else             -> ColorPending
+        animatedProgreso >= 1f   -> ColorApproved
+        animatedProgreso > 0f    -> ColorPending
+        else                     -> ColorPending
     }
 
     GlassCard(
@@ -108,16 +124,18 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Barra de progreso visual premium
-            LinearProgressIndicator(
-                progress = { progreso },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = colorBarra,
-                trackColor = GlassWhite
-            )
+            // Barra de progreso visual premium animada
+            Box(modifier = Modifier.fillMaxWidth()) {
+                LinearProgressIndicator(
+                    progress = { animatedProgreso },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = colorBarra,
+                    trackColor = GlassWhite
+                )
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -143,4 +161,3 @@ private fun MetricChip(label: String, value: String, valueColor: Color) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }
-
