@@ -2,13 +2,14 @@ package com.mars.madereraapp.ui.requerimientos
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -18,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.remote.RequerimientoDetalleItem
 import com.mars.madereraapp.ui.components.*
@@ -42,7 +42,18 @@ fun RequerimientoDetalleScreen(
         containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text("DETALLE DE REQUERIMIENTO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
+                title = {
+                    Column {
+                        Text("DETALLE DE REQUERIMIENTO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                        if (detalles.isNotEmpty()) {
+                            Text(
+                                "${detalles.size} artículos",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = PrimaryAmber)
@@ -58,7 +69,7 @@ fun RequerimientoDetalleScreen(
         AnimatedContent(
             targetState = Triple(isLoading, error, detalles),
             transitionSpec = {
-                fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+                fadeIn(animationSpec = tween(400)) togetherWith fadeOut(animationSpec = tween(400))
             },
             label = "StateTransition",
             modifier = Modifier.padding(padding)
@@ -81,16 +92,30 @@ fun RequerimientoDetalleScreen(
                     err != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(err ?: "Error desconocido", color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
                     }
-                    itemsList.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("SIN ARTÍCULOS ENCONTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                    }
+                    itemsList.isEmpty() -> EmptyStateBox(
+                        icon = Icons.AutoMirrored.Filled.ListAlt,
+                        title = "Sin artículos encontrados",
+                        subtitle = "Desliza para actualizar"
+                    )
                     else -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        items(itemsList) { item -> 
-                            DetalleArticuloCard(item) 
+                        itemsIndexed(itemsList) { index, item ->
+                            val delay = (index * 60).coerceAtMost(500)
+                            var visible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay(delay.toLong())
+                                visible = true
+                            }
+                            AnimatedVisibility(
+                                visible = visible,
+                                enter = fadeIn(animationSpec = tween(400)) +
+                                        slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400))
+                            ) {
+                                DetalleArticuloCard(item)
+                            }
                         }
                     }
                 }
@@ -102,10 +127,10 @@ fun RequerimientoDetalleScreen(
 @Composable
 private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
     val targetProgreso = if (item.pedido > 0) (item.entregado / item.pedido).toFloat().coerceIn(0f, 1f) else 0f
-    
+
     val animatedProgreso by animateFloatAsState(
         targetValue = targetProgreso,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
         label = "ProgressBarAnimation"
     )
 
@@ -119,8 +144,31 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            Text(item.articulo.uppercase(), style = MaterialTheme.typography.titleSmall, color = PrimaryAmber, fontWeight = FontWeight.Bold)
-            Text("PROVEEDOR: ${item.proveedor}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        item.articulo.uppercase(),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = PrimaryAmber,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "PROVEEDOR: ${item.proveedor}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                }
+                // Percentage badge
+                StatusBadge(
+                    text = "${(animatedProgreso * 100).toInt()}%",
+                    statusColor = colorBarra
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -136,13 +184,13 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
                     trackColor = GlassWhite
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 MetricChip("PEDIDO", item.pedido.toInt().toString(), TextSecondary)
                 MetricChip("ENTREGADO", item.entregado.toInt().toString(), ColorApproved)
-                
+
                 val faltante = item.faltante.toInt()
                 if (faltante < 0) {
                     MetricChip("EXTRA", (faltante * -1).toString(), ColorApproved)

@@ -1,22 +1,8 @@
 package com.mars.madereraapp.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.ListAlt
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material3.*
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,12 +11,8 @@ import androidx.navigation.navArgument
 import com.mars.madereraapp.ui.auth.LoginScreen
 import com.mars.madereraapp.ui.auth.SessionViewModel
 import com.mars.madereraapp.ui.ingresos.IngresoDetalleScreen
-import com.mars.madereraapp.ui.requerimientos.RequerimientoDetalleScreen
-import com.mars.madereraapp.ui.theme.BackgroundDark
-import com.mars.madereraapp.ui.theme.SurfaceDark
-import com.mars.madereraapp.ui.theme.TextPrimary
-import com.mars.madereraapp.ui.theme.TextSecondary
 import com.mars.madereraapp.ui.ingresos.NewIngresoScreen
+import com.mars.madereraapp.ui.requerimientos.RequerimientoDetalleScreen
 
 @Composable
 fun MaderaNavGraph(
@@ -38,9 +20,31 @@ fun MaderaNavGraph(
     startDestination: String = "login",
     sessionViewModel: SessionViewModel
 ) {
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        enterTransition = {
+            fadeIn(animationSpec = tween(300)) +
+            slideInHorizontally(initialOffsetX = { it / 4 }, animationSpec = tween(300))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(200))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(300)) +
+            slideInHorizontally(initialOffsetX = { -it / 4 }, animationSpec = tween(300))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(200)) +
+            slideOutHorizontally(targetOffsetX = { it / 4 }, animationSpec = tween(200))
+        }
+    ) {
 
-        composable("login") {
+        composable(
+            "login",
+            enterTransition = { fadeIn(animationSpec = tween(500)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("main") {
@@ -50,7 +54,13 @@ fun MaderaNavGraph(
             )
         }
 
-        composable("main") {
+        composable(
+            "main",
+            enterTransition = {
+                fadeIn(animationSpec = tween(400)) +
+                scaleIn(initialScale = 0.95f, animationSpec = tween(400))
+            }
+        ) {
             MainScreen(
                 sessionViewModel = sessionViewModel,
                 onNavigateToRequerimientoDetalle = { id -> navController.navigate("requerimiento_detalle/$id") },
@@ -67,7 +77,15 @@ fun MaderaNavGraph(
 
         composable(
             "requerimiento_detalle/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
+            arguments = listOf(navArgument("id") { type = NavType.IntType }),
+            enterTransition = {
+                fadeIn(animationSpec = tween(350)) +
+                slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(350, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(250)) +
+                slideOutHorizontally(targetOffsetX = { it / 3 }, animationSpec = tween(250))
+            }
         ) { backStack ->
             val id = backStack.arguments?.getInt("id") ?: return@composable
             RequerimientoDetalleScreen(
@@ -76,13 +94,31 @@ fun MaderaNavGraph(
             )
         }
 
-        composable("nuevo_ingreso") {
+        composable(
+            "nuevo_ingreso",
+            enterTransition = {
+                fadeIn(animationSpec = tween(350)) +
+                slideInVertically(initialOffsetY = { it / 2 }, animationSpec = tween(400, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(250)) +
+                slideOutVertically(targetOffsetY = { it / 2 }, animationSpec = tween(300))
+            }
+        ) {
             NewIngresoScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
             "ingreso_detalle/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
+            arguments = listOf(navArgument("id") { type = NavType.IntType }),
+            enterTransition = {
+                fadeIn(animationSpec = tween(350)) +
+                slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(350, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(250)) +
+                slideOutHorizontally(targetOffsetX = { it / 3 }, animationSpec = tween(250))
+            }
         ) { backStack ->
             val id = backStack.arguments?.getInt("id") ?: return@composable
             IngresoDetalleScreen(

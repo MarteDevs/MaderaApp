@@ -10,13 +10,12 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -67,19 +66,28 @@ fun RequerimientoListScreen(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth().background(BackgroundDark)) {
                 TopAppBar(
-                    title = { Text("REQUERIMIENTOS", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
+                    title = {
+                        Column {
+                            Text("REQUERIMIENTOS", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                            Text(
+                                "${requerimientos.size} registros",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextSecondary
+                            )
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
                 )
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterButton(
+                    FilterChipButton(
                         text = "Todos",
                         isActive = filtroEstado == "TODOS" && filtroMina == "TODAS" && filtroFecha == null,
                         onClick = {
@@ -88,22 +96,22 @@ fun RequerimientoListScreen(
                             viewModel.filtroFecha.value = null
                         }
                     )
-                    
-                    FilterButton(
+
+                    FilterChipButton(
                         text = "Pendientes",
                         isActive = filtroEstado == "PENDIENTE",
                         onClick = { viewModel.filtroEstado.value = if (filtroEstado == "PENDIENTE") "TODOS" else "PENDIENTE" }
                     )
 
                     minas.forEach { mina ->
-                        FilterButton(
+                        FilterChipButton(
                             text = mina.nombre,
                             isActive = filtroMina == mina.nombre,
                             onClick = { viewModel.filtroMina.value = if (filtroMina == mina.nombre) "TODAS" else mina.nombre }
                         )
                     }
 
-                    FilterButton(
+                    FilterChipButton(
                         text = filtroFecha ?: "Fecha",
                         isActive = filtroFecha != null,
                         icon = Icons.Default.CalendarToday,
@@ -119,7 +127,7 @@ fun RequerimientoListScreen(
                         }
                     }
                 }
-                Divider(color = GlassWhite, modifier = Modifier.padding(top = 4.dp))
+                HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(top = 4.dp))
             }
         }
     ) { padding ->
@@ -147,22 +155,28 @@ fun RequerimientoListScreen(
                 modifier = Modifier.fillMaxSize().padding(padding)
             ) {
                 if (requerimientos.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("SIN REQUERIMIENTOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                            Text("DESLIZA PARA ACTUALIZAR", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(0.4f))
-                        }
-                    }
+                    EmptyStateBox(
+                        icon = Icons.AutoMirrored.Filled.ListAlt,
+                        title = "Sin requerimientos",
+                        subtitle = "Desliza hacia abajo para actualizar"
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        items(requerimientos) { req ->
+                        itemsIndexed(requerimientos) { index, req ->
+                            val delay = (index * 40).coerceAtMost(400)
+                            var visible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay(delay.toLong())
+                                visible = true
+                            }
                             AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn() + slideInVertically { it / 2 }
+                                visible = visible,
+                                enter = fadeIn(animationSpec = tween(350)) +
+                                        slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(350))
                             ) {
                                 RequerimientoCard(req, onClick = {
                                     val sid = req.serverId
@@ -178,17 +192,23 @@ fun RequerimientoListScreen(
 }
 
 @Composable
-private fun FilterButton(
+private fun FilterChipButton(
     text: String,
     isActive: Boolean,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     onClick: () -> Unit
 ) {
+    val scale by animateFloatAsState(
+        targetValue = if (isActive) 1.05f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    )
+
     Surface(
         color = if (isActive) PrimaryAmber.copy(alpha = 0.2f) else SurfaceContainer,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, if (isActive) PrimaryAmber else GlassWhite),
-        onClick = onClick
+        onClick = onClick,
+        modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -210,10 +230,13 @@ private fun FilterButton(
 @Composable
 fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
     val isClickable = req.serverId != null
-    
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f)
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    )
 
     GlassCard(
         modifier = Modifier
@@ -255,14 +278,14 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                     StatusBadge(req.estado, statusColor)
                 }
             }
-            
-            Divider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
-            
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                InfoRow(icon = "📅", text = req.fecha)
-                InfoRow(icon = "⛏", text = req.minaNombre)
+
+            HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DetailRow(icon = Icons.Default.CalendarToday, text = req.fecha)
+                DetailRow(icon = Icons.Default.Terrain, text = req.minaNombre)
                 req.supervisorNombre?.let {
-                    InfoRow(icon = "👤", text = it)
+                    DetailRow(icon = Icons.Default.Person, text = it)
                 }
             }
         }
@@ -270,9 +293,9 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
 }
 
 @Composable
-fun InfoRow(icon: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, modifier = Modifier.width(24.dp), fontSize = 14.sp)
+fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(icon, contentDescription = null, tint = TextSecondary.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
     }
 }

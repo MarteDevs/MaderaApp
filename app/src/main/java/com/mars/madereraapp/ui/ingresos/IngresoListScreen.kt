@@ -4,17 +4,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.animation.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.interaction.*
 import androidx.compose.ui.Alignment
@@ -24,14 +21,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.local.entities.IngresoEntity
+import com.mars.madereraapp.ui.components.*
+import com.mars.madereraapp.ui.requerimientos.DetailRow
 import com.mars.madereraapp.ui.theme.*
 import kotlinx.coroutines.launch
-
-import com.mars.madereraapp.ui.components.*
-import com.mars.madereraapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,23 +37,44 @@ fun IngresoListScreen(
 ) {
     val ingresos by viewModel.ingresos.collectAsState()
 
+    // FAB animation
+    var fabVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(400)
+        fabVisible = true
+    }
+
     Scaffold(
         containerColor = BackgroundDark,
         topBar = {
             TopAppBar(
-                title = { Text("INGRESOS DE STOCK", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber) },
+                title = {
+                    Column {
+                        Text("INGRESOS DE STOCK", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                        Text(
+                            "${ingresos.size} registros",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreate,
-                containerColor = PrimaryAmber,
-                contentColor = TextOnPrimary,
-                shape = RoundedCornerShape(16.dp),
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn()
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Registrar Ingreso")
+                FloatingActionButton(
+                    onClick = onNavigateToCreate,
+                    containerColor = PrimaryAmber,
+                    contentColor = TextOnPrimary,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar Ingreso")
+                }
             }
         }
     ) { padding ->
@@ -85,28 +101,35 @@ fun IngresoListScreen(
                 },
                 modifier = Modifier.fillMaxSize().padding(padding)
             ) {
-            if (ingresos.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("SIN INGRESOS REGISTRADOS", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                        Text("DESLIZA PARA ACTUALIZAR", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(0.4f))
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(ingresos) { ing ->
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = true,
-                            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically { it / 2 }
-                        ) {
-                            IngresoCard(ing, onClick = {
-                                val sid = ing.serverId
-                                if (sid != null) onNavigateToDetail(sid)
-                            })
+                if (ingresos.isEmpty()) {
+                    EmptyStateBox(
+                        icon = Icons.Default.Inventory,
+                        title = "Sin ingresos registrados",
+                        subtitle = "Desliza hacia abajo para actualizar"
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        itemsIndexed(ingresos) { index, ing ->
+                            val delay = (index * 40).coerceAtMost(400)
+                            var visible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay(delay.toLong())
+                                visible = true
+                            }
+                            AnimatedVisibility(
+                                visible = visible,
+                                enter = fadeIn(animationSpec = tween(350)) +
+                                        slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(350))
+                            ) {
+                                IngresoCard(ing, onClick = {
+                                    val sid = ing.serverId
+                                    if (sid != null) onNavigateToDetail(sid)
+                                })
+                            }
                         }
                     }
                 }
@@ -114,15 +137,17 @@ fun IngresoListScreen(
         }
     }
 }
-}
 
 @Composable
 fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
     val isClickable = ing.serverId != null
-    
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f)
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    )
 
     GlassCard(
         modifier = Modifier
@@ -152,23 +177,14 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
                     StatusBadge("SINCRONIZADO", ColorApproved)
                 }
             }
-            
-            Divider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
-            
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                InfoRow(icon = "📅", text = ing.fecha)
-                ing.viaje?.let { InfoRow(icon = "🚛", text = "Viaje: $it") }
-                ing.vale?.let { InfoRow(icon = "🧾", text = "Vale: $it") }
+
+            HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DetailRow(icon = Icons.Default.CalendarToday, text = ing.fecha)
+                ing.viaje?.let { DetailRow(icon = Icons.Default.LocalShipping, text = "Viaje: $it") }
+                ing.vale?.let { DetailRow(icon = Icons.Default.Receipt, text = "Vale: $it") }
             }
         }
     }
 }
-
-@Composable
-fun InfoRow(icon: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, modifier = Modifier.width(24.dp), fontSize = 14.sp)
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-    }
-}
-
