@@ -25,34 +25,28 @@ import androidx.compose.ui.unit.sp
 import com.mars.madereraapp.ui.theme.*
 
 /**
- * Tarjeta con estilo Glassmorphism para el diseño Industrial Excellence.
+ * Tarjeta minimalista con sombra suave.
  */
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(GlassSurface)
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(GlassWhite, Color.Transparent, Color.Transparent)
-                ),
-                shape = RoundedCornerShape(24.dp)
-            )
-            .padding(20.dp)
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = SurfaceLight,
+        shadowElevation = 2.dp,
+        tonalElevation = 0.dp
     ) {
-        Column {
+        Column(modifier = Modifier.padding(16.dp)) {
             content()
         }
     }
 }
 
 /**
- * Botón con estilo industrial y degradado ámbar/oro.
+ * Botón primario con degradado cálido.
  */
 @Composable
 fun IndustrialButton(
@@ -64,35 +58,27 @@ fun IndustrialButton(
     Button(
         onClick = onClick,
         modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(12.dp)),
+            .height(52.dp),
         enabled = enabled,
+        shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = TextOnPrimary
+            containerColor = PrimaryWood,
+            contentColor = TextOnPrimary,
+            disabledContainerColor = PrimaryWood.copy(alpha = 0.4f),
+            disabledContentColor = TextOnPrimary.copy(alpha = 0.6f)
         ),
-        contentPadding = PaddingValues()
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 0.dp
+        ),
+        contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(PrimaryAmber, PrimaryGold)
-                    )
-                )
-                .padding(horizontal = 24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                content()
-            }
-        }
+        content()
     }
 }
 
 /**
- * Badge de estado con estilo premium.
+ * Badge de estado con estilo pill minimalista.
  */
 @Composable
 fun StatusBadge(
@@ -101,21 +87,22 @@ fun StatusBadge(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.clip(RoundedCornerShape(50)),
-        color = statusColor.copy(alpha = 0.2f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        color = statusColor.copy(alpha = 0.1f)
     ) {
         Text(
-            text = text.uppercase(),
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            text = text,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelMedium,
-            color = statusColor
+            color = statusColor,
+            fontWeight = FontWeight.Medium
         )
     }
 }
 
 /**
- * TextField con estilo Glass para formularios industriales.
+ * TextField con estilo limpio para formularios.
  */
 @Composable
 fun GlassTextField(
@@ -137,8 +124,8 @@ fun GlassTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label.uppercase(), style = MaterialTheme.typography.labelSmall) },
-        placeholder = { Text(placeholder, color = TextSecondary.copy(alpha = 0.5f)) },
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        placeholder = { Text(placeholder, color = TextTertiary) },
         modifier = modifier.fillMaxWidth(),
         singleLine = singleLine,
         enabled = enabled,
@@ -147,28 +134,28 @@ fun GlassTextField(
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
         leadingIcon = leadingIcon,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = PrimaryAmber,
-            unfocusedBorderColor = GlassWhite,
-            focusedTextColor = Color.White,
+            focusedBorderColor = PrimaryWood,
+            unfocusedBorderColor = BorderLight,
+            focusedTextColor = TextPrimary,
             unfocusedTextColor = TextPrimary,
-            cursorColor = PrimaryAmber,
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            focusedLabelColor = PrimaryAmber,
+            cursorColor = PrimaryWood,
+            focusedContainerColor = SurfaceLight,
+            unfocusedContainerColor = SurfaceLight,
+            focusedLabelColor = PrimaryWood,
             unfocusedLabelColor = TextSecondary,
             errorBorderColor = ColorRejected,
-            disabledBorderColor = GlassWhite.copy(alpha = 0.5f),
-            disabledTextColor = TextSecondary
+            disabledBorderColor = DividerColor,
+            disabledTextColor = TextTertiary
         )
     )
 }
 
 /**
- * Dropdown selector con estilo Glass para formularios industriales.
+ * Dropdown selector con estilo limpio.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,25 +178,25 @@ fun <T> GlassDropdown(
             value = if (selectedOption != null) optionLabel(selectedOption) else "",
             onValueChange = {},
             readOnly = true,
-            label = { Text(label.uppercase(), style = MaterialTheme.typography.labelSmall) },
+            label = { Text(label, style = MaterialTheme.typography.labelMedium) },
             trailingIcon = {
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = if (expanded) PrimaryAmber else TextSecondary
+                    tint = if (expanded) PrimaryWood else TextSecondary
                 )
             },
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryAmber,
-                unfocusedBorderColor = GlassWhite,
-                focusedTextColor = Color.White,
+                focusedBorderColor = PrimaryWood,
+                unfocusedBorderColor = BorderLight,
+                focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary,
-                cursorColor = PrimaryAmber,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedLabelColor = PrimaryAmber,
+                cursorColor = PrimaryWood,
+                focusedContainerColor = SurfaceLight,
+                unfocusedContainerColor = SurfaceLight,
+                focusedLabelColor = PrimaryWood,
                 unfocusedLabelColor = TextSecondary
             )
         )
@@ -217,17 +204,17 @@ fun <T> GlassDropdown(
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
-            containerColor = SurfaceContainer,
-            shape = RoundedCornerShape(14.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, GlassWhite)
+            containerColor = SurfaceLight,
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, DividerColor)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             optionLabel(option),
-                            color = if (option == selectedOption) PrimaryAmber else TextPrimary,
-                            fontWeight = if (option == selectedOption) FontWeight.Bold else FontWeight.Normal
+                            color = if (option == selectedOption) PrimaryWood else TextPrimary,
+                            fontWeight = if (option == selectedOption) FontWeight.SemiBold else FontWeight.Normal
                         )
                     },
                     onClick = {
@@ -255,8 +242,8 @@ fun EmptyStateBox(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "emptyState")
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.6f,
+        initialValue = 0.4f,
+        targetValue = 0.7f,
         animationSpec = infiniteRepeatable(
             animation = tween(2000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
@@ -269,23 +256,22 @@ fun EmptyStateBox(
             Icon(
                 icon,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = TextSecondary.copy(alpha = alpha)
+                modifier = Modifier.size(56.dp),
+                tint = TextTertiary.copy(alpha = alpha)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                title.uppercase(),
+                title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextSecondary,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.1.sp
+                fontWeight = FontWeight.Medium
             )
             if (subtitle.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    subtitle.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary.copy(0.4f)
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextTertiary
                 )
             }
         }
@@ -293,7 +279,7 @@ fun EmptyStateBox(
 }
 
 /**
- * Encabezado de sección con línea decorativa.
+ * Encabezado de sección minimalista.
  */
 @Composable
 fun SectionHeader(
@@ -309,17 +295,16 @@ fun SectionHeader(
         Box(
             modifier = Modifier
                 .width(3.dp)
-                .height(18.dp)
+                .height(16.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(PrimaryAmber)
+                .background(PrimaryWood)
         )
         Spacer(modifier = Modifier.width(10.dp))
         Text(
-            title.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
+            title,
+            style = MaterialTheme.typography.labelLarge,
             color = TextSecondary,
-            letterSpacing = 0.08.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

@@ -22,12 +22,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.local.entities.RequerimientoEntity
 import com.mars.madereraapp.ui.components.*
@@ -62,29 +60,34 @@ fun RequerimientoListScreen(
     )
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = BackgroundLight,
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth().background(BackgroundDark)) {
+            Column(modifier = Modifier.fillMaxWidth().background(BackgroundLight)) {
                 TopAppBar(
                     title = {
                         Column {
-                            Text("REQUERIMIENTOS", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                            Text(
+                                "Requerimientos",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
                             Text(
                                 "${requerimientos.size} registros",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary
+                                color = TextTertiary
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
                 )
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilterChipButton(
@@ -123,11 +126,11 @@ fun RequerimientoListScreen(
                             onClick = { viewModel.filtroFecha.value = null },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.Clear, contentDescription = "Limpiar fecha", tint = PrimaryAmber, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Clear, contentDescription = "Limpiar fecha", tint = PrimaryWood, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
-                HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(top = 4.dp))
+                HorizontalDivider(color = DividerColor)
             }
         }
     ) { padding ->
@@ -136,7 +139,7 @@ fun RequerimientoListScreen(
         val scope = rememberCoroutineScope()
 
         Scaffold(
-            containerColor = Color.Transparent,
+            containerColor = BackgroundLight,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
             PullToRefreshBox(
@@ -164,25 +167,13 @@ fun RequerimientoListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(requerimientos) { index, req ->
-                            val delay = (index * 40).coerceAtMost(400)
-                            var visible by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay(delay.toLong())
-                                visible = true
-                            }
-                            AnimatedVisibility(
-                                visible = visible,
-                                enter = fadeIn(animationSpec = tween(350)) +
-                                        slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(350))
-                            ) {
-                                RequerimientoCard(req, onClick = {
-                                    val sid = req.serverId
-                                    if (sid != null) onNavigateToDetail(sid)
-                                })
-                            }
+                        itemsIndexed(requerimientos) { _, req ->
+                            RequerimientoCard(req, onClick = {
+                                val sid = req.serverId
+                                if (sid != null) onNavigateToDetail(sid)
+                            })
                         }
                     }
                 }
@@ -199,29 +190,30 @@ private fun FilterChipButton(
     onClick: () -> Unit
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (isActive) 1.05f else 1f,
+        targetValue = if (isActive) 1.03f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
     Surface(
-        color = if (isActive) PrimaryAmber.copy(alpha = 0.2f) else SurfaceContainer,
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (isActive) PrimaryAmber else GlassWhite),
+        color = if (isActive) PrimaryWood.copy(alpha = 0.1f) else SurfaceContainer,
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, if (isActive) PrimaryWood.copy(alpha = 0.4f) else DividerColor),
         onClick = onClick,
         modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             if (icon != null) {
-                Icon(icon, contentDescription = null, tint = if (isActive) PrimaryAmber else TextSecondary, modifier = Modifier.size(16.dp))
+                Icon(icon, contentDescription = null, tint = if (isActive) PrimaryWood else TextTertiary, modifier = Modifier.size(14.dp))
             }
             Text(
-                text = text.uppercase(),
+                text = text,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isActive) PrimaryAmber else TextSecondary
+                color = if (isActive) PrimaryWood else TextSecondary,
+                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
             )
         }
     }
@@ -234,7 +226,7 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
+        targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
@@ -247,7 +239,7 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 indication = null,
                 onClick = onClick
             ) else Modifier)
-            .then(if (!isClickable) Modifier.alpha(0.6f) else Modifier)
+            .then(if (!isClickable) Modifier.alpha(0.5f) else Modifier)
     ) {
         Column {
             Row(
@@ -256,18 +248,18 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = req.codigo_req ?: "SIN CÓDIGO",
+                    text = req.codigo_req ?: "Sin código",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryAmber
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (req.isPendingSync) {
                         Icon(
                             Icons.Default.Sync,
                             contentDescription = "Pendiente",
                             tint = ColorPending,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                     val statusColor = when (req.estado) {
@@ -279,9 +271,10 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 }
             }
 
-            HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 10.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 DetailRow(icon = Icons.Default.CalendarToday, text = req.fecha)
                 DetailRow(icon = Icons.Default.Terrain, text = req.minaNombre)
                 req.supervisorNombre?.let {
@@ -294,8 +287,8 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
 
 @Composable
 fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Icon(icon, contentDescription = null, tint = TextSecondary.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(15.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
     }
 }

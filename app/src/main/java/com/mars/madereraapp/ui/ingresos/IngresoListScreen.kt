@@ -16,9 +16,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.interaction.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,20 +43,25 @@ fun IngresoListScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("INGRESOS DE STOCK", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                        Text(
+                            "Ingresos de Stock",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
                         Text(
                             "${ingresos.size} registros",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = TextTertiary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
             )
         },
         floatingActionButton = {
@@ -68,10 +71,10 @@ fun IngresoListScreen(
             ) {
                 FloatingActionButton(
                     onClick = onNavigateToCreate,
-                    containerColor = PrimaryAmber,
+                    containerColor = PrimaryWood,
                     contentColor = TextOnPrimary,
                     shape = RoundedCornerShape(16.dp),
-                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Registrar Ingreso")
                 }
@@ -83,7 +86,7 @@ fun IngresoListScreen(
         val scope = rememberCoroutineScope()
 
         Scaffold(
-            containerColor = Color.Transparent,
+            containerColor = BackgroundLight,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
             PullToRefreshBox(
@@ -111,25 +114,13 @@ fun IngresoListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(ingresos) { index, ing ->
-                            val delay = (index * 40).coerceAtMost(400)
-                            var visible by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay(delay.toLong())
-                                visible = true
-                            }
-                            AnimatedVisibility(
-                                visible = visible,
-                                enter = fadeIn(animationSpec = tween(350)) +
-                                        slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(350))
-                            ) {
-                                IngresoCard(ing, onClick = {
-                                    val sid = ing.serverId
-                                    if (sid != null) onNavigateToDetail(sid)
-                                })
-                            }
+                        itemsIndexed(ingresos) { _, ing ->
+                            IngresoCard(ing, onClick = {
+                                val sid = ing.serverId
+                                if (sid != null) onNavigateToDetail(sid)
+                            })
                         }
                     }
                 }
@@ -145,7 +136,7 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
+        targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
@@ -166,21 +157,21 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = ing.codigo_ingreso ?: "PENDIENTE SYNC",
+                    text = ing.codigo_ingreso ?: "Pendiente sync",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryAmber
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
                 )
                 if (ing.isPendingSync) {
-                    StatusBadge("PENDIENTE", ColorPending)
+                    StatusBadge("Pendiente", ColorPending)
                 } else {
-                    StatusBadge("SINCRONIZADO", ColorApproved)
+                    StatusBadge("Sincronizado", ColorApproved)
                 }
             }
 
-            HorizontalDivider(color = GlassWhite, modifier = Modifier.padding(vertical = 12.dp))
+            HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 10.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 DetailRow(icon = Icons.Default.CalendarToday, text = ing.fecha)
                 ing.viaje?.let { DetailRow(icon = Icons.Default.LocalShipping, text = "Viaje: $it") }
                 ing.vale?.let { DetailRow(icon = Icons.Default.Receipt, text = "Vale: $it") }

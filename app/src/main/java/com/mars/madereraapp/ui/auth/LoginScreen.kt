@@ -19,8 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -30,7 +28,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.R
 import com.mars.madereraapp.ui.components.*
@@ -63,9 +60,9 @@ fun LoginScreen(
     LaunchedEffect(viewModel.error) {
         if (viewModel.error != null) {
             repeat(6) {
-                shakeOffset = 10f
+                shakeOffset = 8f
                 delay(50)
-                shakeOffset = -10f
+                shakeOffset = -8f
                 delay(50)
             }
             shakeOffset = 0f
@@ -75,11 +72,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF131313))
-                )
-            )
+            .background(BackgroundLight)
     ) {
         Column(
             modifier = Modifier
@@ -92,30 +85,30 @@ fun LoginScreen(
             // Animated Logo
             AnimatedVisibility(
                 visible = logoVisible,
-                enter = fadeIn(tween(800)) + scaleIn(initialScale = 0.8f, animationSpec = tween(800))
+                enter = fadeIn(tween(600)) + scaleIn(initialScale = 0.9f, animationSpec = tween(600))
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(id = R.drawable.logo_madera),
                         contentDescription = "Logo Madera Poltand",
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(100.dp)
                             .clip(RoundedCornerShape(20.dp))
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "MADERA POLTAND",
+                        text = "Madera Poltand",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = PrimaryAmber,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "INDUSTRIAL ERP SYSTEM v1.5",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 48.dp)
+                        text = "Sistema de Gestión v1.5",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 40.dp)
                     )
                 }
             }
@@ -123,43 +116,46 @@ fun LoginScreen(
             // Animated Form Card
             AnimatedVisibility(
                 visible = formVisible,
-                enter = fadeIn(tween(600)) + slideInVertically(
-                    initialOffsetY = { it / 4 },
-                    animationSpec = tween(600, easing = FastOutSlowInEasing)
+                enter = fadeIn(tween(500)) + slideInVertically(
+                    initialOffsetY = { it / 5 },
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
                 )
             ) {
-                GlassCard(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy))
+                        .animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)),
+                    shape = RoundedCornerShape(20.dp),
+                    color = SurfaceLight,
+                    shadowElevation = 4.dp
                 ) {
-                    Column {
-                        // User field — using GlassTextField
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        // User field
                         GlassTextField(
                             value = viewModel.usuario,
                             onValueChange = { viewModel.usuario = it.uppercase() },
                             label = "Usuario",
                             leadingIcon = {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Person, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(20.dp))
                             },
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                        // Password field — using GlassTextField
+                        // Password field
                         GlassTextField(
                             value = viewModel.clave,
                             onValueChange = { viewModel.clave = it.uppercase() },
                             label = "Contraseña",
                             leadingIcon = {
-                                Icon(Icons.Default.Lock, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(20.dp))
                             },
                             trailingIcon = {
                                 val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(imageVector = icon, contentDescription = null, tint = TextSecondary)
+                                    Icon(imageVector = icon, contentDescription = null, tint = TextTertiary)
                                 }
                             },
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -176,17 +172,25 @@ fun LoginScreen(
                             enter = expandVertically() + fadeIn(),
                             exit = shrinkVertically() + fadeOut()
                         ) {
-                            Text(
-                                text = viewModel.error ?: "",
-                                color = ColorRejected,
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(top = 12.dp)
-                            )
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                color = ColorRejected.copy(alpha = 0.08f)
+                            ) {
+                                Text(
+                                    text = viewModel.error ?: "",
+                                    color = ColorRejected,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
 
-                        // Industrial login button
+                        // Login button
                         IndustrialButton(
                             onClick = { viewModel.onLoginClick() },
                             modifier = Modifier.fillMaxWidth(),
@@ -194,15 +198,15 @@ fun LoginScreen(
                         ) {
                             if (viewModel.cargando) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(22.dp),
                                     color = TextOnPrimary,
-                                    strokeWidth = 3.dp
+                                    strokeWidth = 2.dp
                                 )
                             } else {
                                 Text(
-                                    text = "ACCEDER AL SISTEMA",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
+                                    text = "Iniciar Sesión",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
@@ -213,9 +217,9 @@ fun LoginScreen(
 
         // Version footer
         Text(
-            text = "© 2026 Madera Poltand • Todos los derechos reservados",
+            text = "© 2026 Madera Poltand",
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary.copy(alpha = 0.2f),
+            color = TextTertiary.copy(alpha = 0.5f),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)

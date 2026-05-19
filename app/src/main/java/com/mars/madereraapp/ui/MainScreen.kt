@@ -4,8 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -17,14 +17,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.R
 import com.mars.madereraapp.ui.auth.SessionViewModel
@@ -58,7 +57,7 @@ fun MainScreen(
             val network = connectivityManager.activeNetwork
             val capabilities = connectivityManager.getNetworkCapabilities(network)
             isOnline = capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-            kotlinx.coroutines.delay(5000) // Check every 5s
+            kotlinx.coroutines.delay(5000)
         }
     }
 
@@ -66,31 +65,37 @@ fun MainScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            containerColor = SurfaceContainer,
-            titleContentColor = PrimaryAmber,
+            containerColor = SurfaceLight,
+            titleContentColor = TextPrimary,
             textContentColor = TextSecondary,
-            title = { Text("CERRAR SESIÓN", fontWeight = FontWeight.Bold) },
+            shape = RoundedCornerShape(20.dp),
+            title = { Text("Cerrar Sesión", fontWeight = FontWeight.SemiBold) },
             text = { Text("¿Estás seguro de que deseas salir del sistema?") },
             confirmButton = {
-                IndustrialButton(
+                Button(
                     onClick = {
                         showLogoutDialog = false
                         onLogout()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ColorRejected,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("CONFIRMAR", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Cerrar sesión", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("CANCELAR", color = TextSecondary)
+                    Text("Cancelar", color = TextSecondary)
                 }
             }
         )
     }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = BackgroundLight,
         topBar = {
             if (selectedTab == 0) {
                 TopAppBar(
@@ -100,33 +105,47 @@ fun MainScreen(
                                 painter = painterResource(id = R.drawable.logo_madera),
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text("MADERA POLTAND", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    // Online/offline indicator dot
+                                Text(
+                                    "Madera Poltand",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
                                     Box(
                                         modifier = Modifier
                                             .size(6.dp)
-                                            .clip(RoundedCornerShape(50))
+                                            .clip(CircleShape)
                                             .background(if (isOnline) ColorApproved else ColorRejected)
                                     )
                                     Text(
-                                        if (isOnline) "CONECTADO" else "SIN CONEXIÓN",
+                                        if (isOnline) "Conectado" else "Sin conexión",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (isOnline) TextSecondary else ColorRejected
+                                        color = if (isOnline) TextTertiary else ColorRejected
                                     )
                                 }
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = BackgroundLight,
+                        scrolledContainerColor = BackgroundLight
+                    ),
                     actions = {
                         IconButton(onClick = { showLogoutDialog = true }) {
-                            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Cerrar Sesión", tint = TextSecondary)
+                            Icon(
+                                Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Cerrar Sesión",
+                                tint = TextTertiary
+                            )
                         }
                     }
                 )
@@ -134,22 +153,23 @@ fun MainScreen(
         },
         bottomBar = {
             NavigationBar(
-                containerColor = SurfaceDark,
+                containerColor = SurfaceLight,
                 tonalElevation = 0.dp,
-                modifier = Modifier
-                    .border(1.dp, GlassWhite, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                modifier = Modifier.shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)
+                )
             ) {
                 val tabs = listOf(
                     Triple(0, Icons.Default.Home, "Inicio"),
-                    Triple(1, Icons.AutoMirrored.Filled.ListAlt, "Reqs"),
+                    Triple(1, Icons.AutoMirrored.Filled.ListAlt, "Requerimientos"),
                     Triple(2, Icons.Default.Inventory, "Ingresos")
                 )
 
                 tabs.forEach { (index, icon, label) ->
                     val isSelected = selectedTab == index
                     val iconScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.15f else 1f,
+                        targetValue = if (isSelected) 1.1f else 1f,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
                     )
 
@@ -165,25 +185,23 @@ fun MainScreen(
                         selected = isSelected,
                         onClick = { selectedTab = index },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = PrimaryAmber,
-                            selectedTextColor = PrimaryAmber,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary,
-                            indicatorColor = PrimaryAmber.copy(alpha = 0.12f)
+                            selectedIconColor = PrimaryWood,
+                            selectedTextColor = PrimaryWood,
+                            unselectedIconColor = TextTertiary,
+                            unselectedTextColor = TextTertiary,
+                            indicatorColor = AccentSoft
                         )
                     )
                 }
             }
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0A0A0A), BackgroundDark)
-                )
-            )) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .background(BackgroundLight)
+        ) {
 
             // Offline banner
             AnimatedVisibility(
@@ -192,16 +210,20 @@ fun MainScreen(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Surface(
-                    color = ColorRejected.copy(alpha = 0.15f),
+                    color = ColorRejected.copy(alpha = 0.08f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(Icons.Default.WifiOff, contentDescription = null, tint = ColorRejected, modifier = Modifier.size(16.dp))
-                        Text("Modo offline — los cambios se sincronizarán al reconectar", style = MaterialTheme.typography.labelSmall, color = ColorRejected)
+                        Text(
+                            "Modo offline — los cambios se sincronizarán al reconectar",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ColorRejected
+                        )
                     }
                 }
             }
@@ -210,12 +232,12 @@ fun MainScreen(
                 targetState = selectedTab,
                 transitionSpec = {
                     if (targetState > initialState) {
-                        (slideInHorizontally { it / 3 } + fadeIn(tween(250))).togetherWith(
-                            slideOutHorizontally { -it / 3 } + fadeOut(tween(200))
+                        (slideInHorizontally { it / 4 } + fadeIn(tween(300))).togetherWith(
+                            slideOutHorizontally { -it / 4 } + fadeOut(tween(200))
                         )
                     } else {
-                        (slideInHorizontally { -it / 3 } + fadeIn(tween(250))).togetherWith(
-                            slideOutHorizontally { it / 3 } + fadeOut(tween(200))
+                        (slideInHorizontally { -it / 4 } + fadeIn(tween(300))).togetherWith(
+                            slideOutHorizontally { it / 4 } + fadeOut(tween(200))
                         )
                     }.using(SizeTransform(clip = false))
                 },
@@ -241,22 +263,22 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         SectionHeader(title = "Resumen Operativo")
 
         // Row 1
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
                 title = "Total Reqs",
                 value = total,
                 icon = Icons.Default.Assessment,
-                color = PrimaryAmber,
+                color = PrimaryWood,
                 delay = 0
             )
             DashboardMetricCard(
@@ -272,7 +294,7 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
         // Row 2
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
@@ -303,15 +325,15 @@ fun DashboardTab(viewModel: RequerimientoViewModel) {
                 painter = painterResource(id = R.drawable.logo_madera),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .graphicsLayer(alpha = 0.2f)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .graphicsLayer(alpha = 0.15f)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "INDUSTRIAL ERP • PREMIUM",
+                text = "Madera Poltand · ERP v1.5",
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary.copy(alpha = 0.15f)
+                color = TextTertiary.copy(alpha = 0.4f)
             )
         }
     }
@@ -328,7 +350,7 @@ fun DashboardMetricCard(
 ) {
     val animatedValue by animateIntAsState(
         targetValue = value,
-        animationSpec = tween(durationMillis = 1500, delayMillis = delay, easing = FastOutSlowInEasing)
+        animationSpec = tween(durationMillis = 1200, delayMillis = delay, easing = FastOutSlowInEasing)
     )
 
     var visible by remember { mutableStateOf(false) }
@@ -339,10 +361,10 @@ fun DashboardMetricCard(
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(500)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500))
+        enter = fadeIn(tween(400)) + slideInVertically(initialOffsetY = { 30 }, animationSpec = tween(400))
     ) {
         GlassCard(
-            modifier = modifier.height(140.dp)
+            modifier = modifier.height(130.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -354,16 +376,24 @@ fun DashboardMetricCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        title.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
+                        title,
+                        style = MaterialTheme.typography.labelMedium,
                         color = TextSecondary
                     )
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = color.copy(alpha = 0.5f),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = color.copy(alpha = 0.1f),
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                icon,
+                                contentDescription = null,
+                                tint = color,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
                 Text(
                     animatedValue.toString(),

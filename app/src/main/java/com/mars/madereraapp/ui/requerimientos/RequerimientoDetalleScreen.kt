@@ -39,27 +39,32 @@ fun RequerimientoDetalleScreen(
     LaunchedEffect(requerimientoId) { viewModel.load(requerimientoId) }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("DETALLE DE REQUERIMIENTO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                        Text(
+                            "Detalle de Requerimiento",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
                         if (detalles.isNotEmpty()) {
                             Text(
                                 "${detalles.size} artículos",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary
+                                color = TextTertiary
                             )
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = PrimaryAmber)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
             )
         }
     ) { padding ->
@@ -69,7 +74,7 @@ fun RequerimientoDetalleScreen(
         AnimatedContent(
             targetState = Triple(isLoading, error, detalles),
             transitionSpec = {
-                fadeIn(animationSpec = tween(400)) togetherWith fadeOut(animationSpec = tween(400))
+                fadeIn(animationSpec = tween(350)) togetherWith fadeOut(animationSpec = tween(350))
             },
             label = "StateTransition",
             modifier = Modifier.padding(padding)
@@ -87,7 +92,7 @@ fun RequerimientoDetalleScreen(
             ) {
                 when {
                     loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = PrimaryAmber)
+                        CircularProgressIndicator(color = PrimaryWood, strokeWidth = 3.dp)
                     }
                     err != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(err ?: "Error desconocido", color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
@@ -100,22 +105,10 @@ fun RequerimientoDetalleScreen(
                     else -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(itemsList) { index, item ->
-                            val delay = (index * 60).coerceAtMost(500)
-                            var visible by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay(delay.toLong())
-                                visible = true
-                            }
-                            AnimatedVisibility(
-                                visible = visible,
-                                enter = fadeIn(animationSpec = tween(400)) +
-                                        slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400))
-                            ) {
-                                DetalleArticuloCard(item)
-                            }
+                        itemsIndexed(itemsList) { _, item ->
+                            DetalleArticuloCard(item)
                         }
                     }
                 }
@@ -130,14 +123,14 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
 
     val animatedProgreso by animateFloatAsState(
         targetValue = targetProgreso,
-        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
         label = "ProgressBarAnimation"
     )
 
     val colorBarra = when {
         animatedProgreso >= 1f   -> ColorApproved
         animatedProgreso > 0f    -> ColorPending
-        else                     -> ColorPending
+        else                     -> DividerColor
     }
 
     GlassCard(
@@ -151,16 +144,16 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        item.articulo.uppercase(),
+                        item.articulo,
                         style = MaterialTheme.typography.titleSmall,
-                        color = PrimaryAmber,
-                        fontWeight = FontWeight.Bold
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        "PROVEEDOR: ${item.proveedor}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        item.proveedor,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
                     )
                 }
                 // Percentage badge
@@ -170,32 +163,30 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Barra de progreso visual premium animada
-            Box(modifier = Modifier.fillMaxWidth()) {
-                LinearProgressIndicator(
-                    progress = { animatedProgreso },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = colorBarra,
-                    trackColor = GlassWhite
-                )
-            }
+            // Progress bar
+            LinearProgressIndicator(
+                progress = { animatedProgreso },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = colorBarra,
+                trackColor = DividerColor
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricChip("PEDIDO", item.pedido.toInt().toString(), TextSecondary)
-                MetricChip("ENTREGADO", item.entregado.toInt().toString(), ColorApproved)
+                MetricChip("Pedido", item.pedido.toInt().toString(), TextSecondary)
+                MetricChip("Entregado", item.entregado.toInt().toString(), ColorApproved)
 
                 val faltante = item.faltante.toInt()
                 if (faltante < 0) {
-                    MetricChip("EXTRA", (faltante * -1).toString(), ColorApproved)
+                    MetricChip("Extra", (faltante * -1).toString(), ColorApproved)
                 } else {
-                    MetricChip("FALTANTE", faltante.toString(), if (faltante > 0) ColorPending else ColorApproved)
+                    MetricChip("Faltante", faltante.toString(), if (faltante > 0) ColorPending else ColorApproved)
                 }
             }
         }
@@ -206,6 +197,6 @@ private fun DetalleArticuloCard(item: RequerimientoDetalleItem) {
 private fun MetricChip(label: String, value: String, valueColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = valueColor, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
     }
 }

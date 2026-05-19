@@ -36,27 +36,32 @@ fun IngresoDetalleScreen(
     LaunchedEffect(ingresoId) { viewModel.load(ingresoId) }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("DETALLE DE INGRESO", style = MaterialTheme.typography.titleLarge, color = PrimaryAmber)
+                        Text(
+                            "Detalle de Ingreso",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
                         if (detalles.isNotEmpty()) {
                             Text(
                                 "${detalles.size} artículos",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary
+                                color = TextTertiary
                             )
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = PrimaryAmber)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
             )
         }
     ) { padding ->
@@ -76,7 +81,7 @@ fun IngresoDetalleScreen(
         ) {
             when {
                 isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryAmber)
+                    CircularProgressIndicator(color = PrimaryWood, strokeWidth = 3.dp)
                 }
                 error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(error!!, color = ColorRejected, style = MaterialTheme.typography.bodyMedium)
@@ -89,22 +94,10 @@ fun IngresoDetalleScreen(
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    itemsIndexed(detalles) { index, item ->
-                        val delay = (index * 60).coerceAtMost(500)
-                        var visible by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) {
-                            kotlinx.coroutines.delay(delay.toLong())
-                            visible = true
-                        }
-                        AnimatedVisibility(
-                            visible = visible,
-                            enter = fadeIn(animationSpec = tween(400)) +
-                                    slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400))
-                        ) {
-                            IngresoDetalleCard(item)
-                        }
+                    itemsIndexed(detalles) { _, item ->
+                        IngresoDetalleCard(item)
                     }
                 }
             }
@@ -116,7 +109,7 @@ fun IngresoDetalleScreen(
 private fun IngresoDetalleCard(item: IngresoDetalleItem) {
     val animatedCantidad by animateFloatAsState(
         targetValue = item.cantidad_entregada.toFloat(),
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
     )
 
     GlassCard(
@@ -129,16 +122,16 @@ private fun IngresoDetalleCard(item: IngresoDetalleItem) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    item.articulo.uppercase(),
+                    item.articulo,
                     style = MaterialTheme.typography.titleSmall,
-                    color = PrimaryAmber,
-                    fontWeight = FontWeight.Bold
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    "PROVEEDOR: ${item.proveedor}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary
+                    item.proveedor,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextTertiary
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -148,7 +141,7 @@ private fun IngresoDetalleCard(item: IngresoDetalleItem) {
                     fontWeight = FontWeight.Bold,
                     color = ColorApproved
                 )
-                Text("ENTREGADO", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text("Entregado", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
             }
         }
     }
