@@ -41,6 +41,8 @@ class IngresoRepository @Inject constructor(
                     viaje = item.viaje,
                     vale = item.vale,
                     observacion = item.observacion,
+                    total_proveedor = item.total_proveedor,
+                    total_mina = item.total_mina,
                     isPendingSync = false
                 )
                 dao.insertIngreso(entity)

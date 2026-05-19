@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -102,13 +103,71 @@ fun RequerimientoDetalleScreen(
                         title = "Sin artículos encontrados",
                         subtitle = "Desliza para actualizar"
                     )
-                    else -> LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        itemsIndexed(itemsList) { _, item ->
-                            DetalleArticuloCard(item)
+                    else -> {
+                        val showCierreBtn = itemsList.any { it.faltante > 0 }
+                        var showConfirmDialog by remember { mutableStateOf(false) }
+                        val isClosing by viewModel.isLoading.collectAsState()
+                        val cierreSuccess by viewModel.cierreSuccess.collectAsState()
+
+                        LaunchedEffect(cierreSuccess) {
+                            if (cierreSuccess) {
+                                onNavigateBack()
+                            }
+                        }
+
+                        if (showConfirmDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showConfirmDialog = false },
+                                title = { Text("¿Dar por Completado?") },
+                                text = { Text("Los ítems que faltan entregar se cancelarán. Esta acción es definitiva.") },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            showConfirmDialog = false
+                                            viewModel.forzarCierre(requerimientoId)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = ColorApproved)
+                                    ) {
+                                        Text("Completar")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showConfirmDialog = false }) { Text("Cancelar") }
+                                }
+                            )
+                        }
+
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = if(showCierreBtn) 100.dp else 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                itemsIndexed(itemsList) { _, item ->
+                                    DetalleArticuloCard(item)
+                                }
+                            }
+
+                            if (showCierreBtn) {
+                                Button(
+                                    onClick = { showConfirmDialog = true },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ColorApproved),
+                                    shape = RoundedCornerShape(12.dp),
+                                    enabled = !isClosing
+                                ) {
+                                    if (isClosing) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                                    } else {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Dar por Completado", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
                         }
                     }
                 }

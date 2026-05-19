@@ -3,6 +3,7 @@ package com.mars.madereraapp.data.remote
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 data class RequerimientoRequest(
     val fecha: String,
@@ -56,4 +57,7 @@ interface RequerimientoApiService {
 
     @POST("requerimientos")
     suspend fun crear(@Body body: RequerimientoRequest): RequerimientoResponse
+
+    @PUT("requerimientos/{id}/forzar-cierre")
+    suspend fun forzarCierre(@retrofit2.http.Path("id") id: Int): RequerimientoResponse
 }

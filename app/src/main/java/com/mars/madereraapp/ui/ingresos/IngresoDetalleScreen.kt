@@ -91,13 +91,62 @@ fun IngresoDetalleScreen(
                     title = "Sin artículos en este ingreso",
                     subtitle = "Desliza para actualizar"
                 )
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    itemsIndexed(detalles) { _, item ->
-                        IngresoDetalleCard(item)
+                else -> {
+                    val totalProv = detalles.sumOf { it.cantidad_entregada * it.precio_proveedor }
+                    val totalMina = detalles.sumOf { it.cantidad_entregada * it.precio_mina }
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        itemsIndexed(detalles) { _, item ->
+                            IngresoDetalleCard(item)
+                        }
+
+                        if (detalles.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(), 
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = SurfaceContainer
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                                        Text(
+                                            "COSTO TOTAL DEL VIAJE",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextTertiary
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column {
+                                                Text("Proveedor", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                                                Text(
+                                                    "S/ ${"%.2f".format(totalProv)}",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = PrimaryWood
+                                                )
+                                            }
+                                            Column(horizontalAlignment = Alignment.End) {
+                                                Text("Mina", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                                                Text(
+                                                    "S/ ${"%.2f".format(totalMina)}",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = ColorApproved
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -115,33 +164,64 @@ private fun IngresoDetalleCard(item: IngresoDetalleItem) {
     GlassCard(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    item.articulo,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    item.proveedor,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextTertiary
-                )
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            item.articulo,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        if (item.isExtra) {
+                            StatusBadge("Extra", ColorApproved)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        item.proveedor,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        "${animatedCantidad.toInt()}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorApproved
+                    )
+                    Text("Entregado", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    "${animatedCantidad.toInt()}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorApproved
-                )
-                Text("Entregado", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+
+            if (item.precio_proveedor > 0 || item.precio_mina > 0) {
+                HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 10.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("T. Prov", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                        Text(
+                            "S/ ${"%.2f".format(item.cantidad_entregada * item.precio_proveedor)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryWood
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("T. Mina", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                        Text(
+                            "S/ ${"%.2f".format(item.cantidad_entregada * item.precio_mina)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorApproved
+                        )
+                    }
+                }
             }
         }
     }

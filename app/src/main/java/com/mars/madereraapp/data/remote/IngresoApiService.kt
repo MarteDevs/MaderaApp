@@ -31,16 +31,23 @@ data class IngresoHistorialItem(
     val vale: String?,
     val observacion: String?,
     val total_items: Int,
-    val total_entregado: Double
+    val total_entregado: Double,
+    val total_proveedor: Double,
+    val total_mina: Double
 )
 
 data class IngresoDetalleItem(
     val id: Int,
     val articulo: String,
     val proveedor: String,
-    val cantidad_pedida: Double,
-    val cantidad_entregada: Double
-)
+    val pedido: Double? = 0.0,
+    val cantidad_entregada: Double = 0.0,
+    val precio_proveedor: Double = 0.0,
+    val precio_mina: Double = 0.0,
+    val es_extra: Int = 0
+) {
+    val isExtra: Boolean get() = es_extra == 1
+}
 
 interface IngresoApiService {
     @GET("ingresos/pendientes")

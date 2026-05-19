@@ -26,6 +26,8 @@ data class IngresoEntity(
     val viaje: String?,
     val vale: String?,
     val observacion: String?,
+    val total_proveedor: Double = 0.0,
+    val total_mina: Double = 0.0,
     val isPendingSync: Boolean = false
 )
 

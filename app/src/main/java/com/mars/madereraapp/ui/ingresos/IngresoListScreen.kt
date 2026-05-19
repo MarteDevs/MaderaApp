@@ -175,6 +175,28 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
                 DetailRow(icon = Icons.Default.CalendarToday, text = ing.fecha)
                 ing.viaje?.let { DetailRow(icon = Icons.Default.LocalShipping, text = "Viaje: $it") }
                 ing.vale?.let { DetailRow(icon = Icons.Default.Receipt, text = "Vale: $it") }
+
+                if (ing.total_proveedor > 0 || ing.total_mina > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "T. Prov: S/ ${"%.2f".format(ing.total_proveedor)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = PrimaryWood,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "T. Mina: S/ ${"%.2f".format(ing.total_mina)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = ColorApproved,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }

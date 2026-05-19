@@ -280,6 +280,28 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 req.supervisorNombre?.let {
                     DetailRow(icon = Icons.Default.Person, text = it)
                 }
+
+                if (req.total_proveedor > 0 || req.total_mina > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "T. Prov: S/ ${"%.2f".format(req.total_proveedor)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = PrimaryWood, // Blue accent
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "T. Mina: S/ ${"%.2f".format(req.total_mina)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = ColorApproved, // Green accent
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }

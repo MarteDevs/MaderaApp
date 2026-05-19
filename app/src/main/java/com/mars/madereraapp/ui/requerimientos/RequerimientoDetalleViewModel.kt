@@ -37,4 +37,26 @@ class RequerimientoDetalleViewModel @Inject constructor(
             }
         }
     }
+
+    private val _cierreSuccess = MutableStateFlow(false)
+    val cierreSuccess: StateFlow<Boolean> = _cierreSuccess
+
+    fun forzarCierre(id: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val response = apiService.forzarCierre(id)
+                if (response.success) {
+                    _cierreSuccess.value = true
+                } else {
+                    _error.value = response.mensaje ?: "Error al forzar cierre"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error al forzar cierre: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }

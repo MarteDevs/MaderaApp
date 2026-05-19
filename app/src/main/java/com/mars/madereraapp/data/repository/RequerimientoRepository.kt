@@ -35,6 +35,8 @@ class RequerimientoRepository @Inject constructor(
                     supervisor_id = null,
                     supervisorNombre = item.supervisor,
                     estado = item.estado,
+                    total_proveedor = item.total_proveedor,
+                    total_mina = item.total_mina,
                     isPendingSync = false
                 )
                 dao.insertRequerimiento(entity)
@@ -97,6 +99,19 @@ class RequerimientoRepository @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+    suspend fun forzarCierre(id: Int): Result<Boolean> {
+        return try {
+            val response = apiService.forzarCierre(id)
+            if (response.success) {
+                Result.success(true)
+            } else {
+                Result.failure(Exception(response.mensaje ?: "Error al cerrar"))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }
