@@ -37,18 +37,29 @@ class RequerimientoViewModel @Inject constructor(
     val filtroMina = MutableStateFlow("TODAS")
     val filtroFecha = MutableStateFlow<String?>(null) // Format: "dd-MM-yyyy" or similar depending on DB
 
+    val searchQuery = MutableStateFlow("")
+
     // Filtered list to display in Requerimientos Tab
     val requerimientosFiltrados: StateFlow<List<RequerimientoEntity>> = combine(
         requerimientosRaw,
         filtroEstado,
         filtroMina,
-        filtroFecha
-    ) { list, estado, mina, fecha ->
+        filtroFecha,
+        searchQuery
+    ) { list, estado, mina, fecha, query ->
         list.filter { req ->
             val matchesEstado = if (estado == "TODOS") true else req.estado == estado
             val matchesMina = if (mina == "TODAS") true else req.minaNombre == mina
             val matchesFecha = if (fecha == null) true else req.fecha.contains(fecha)
-            matchesEstado && matchesMina && matchesFecha
+            
+            val q = query.lowercase()
+            val matchesQuery = if (q.isBlank()) true else {
+                (req.codigo_req?.lowercase()?.contains(q) == true) ||
+                (req.minaNombre.lowercase().contains(q)) ||
+                (req.supervisorNombre?.lowercase()?.contains(q) == true)
+            }
+
+            matchesEstado && matchesMina && matchesFecha && matchesQuery
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

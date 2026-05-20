@@ -89,21 +89,40 @@ fun IngresoListScreen(
             containerColor = BackgroundLight,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    scope.launch {
-                        isRefreshing = true
-                        viewModel.refresh()
-                        isRefreshing = false
-                        snackbarHostState.showSnackbar(
-                            message = "✓ Datos de ingresos actualizados",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxSize().padding(padding)
-            ) {
+            val searchQuery by viewModel.searchQuery.collectAsState()
+
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.updateSearchQuery(it) },
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                    placeholder = { Text("Buscar por viaje, mina o vale...", color = TextTertiary) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryWood) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryWood,
+                        unfocusedBorderColor = DividerColor,
+                        focusedContainerColor = SurfaceContainer,
+                        unfocusedContainerColor = SurfaceContainer
+                    )
+                )
+
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        scope.launch {
+                            isRefreshing = true
+                            viewModel.refresh()
+                            isRefreshing = false
+                            snackbarHostState.showSnackbar(
+                                message = "✓ Datos de ingresos actualizados",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) {
                 if (ingresos.isEmpty()) {
                     EmptyStateBox(
                         icon = Icons.Default.Inventory,
@@ -124,6 +143,7 @@ fun IngresoListScreen(
                         }
                     }
                 }
+            }
             }
         }
     }

@@ -142,21 +142,40 @@ fun RequerimientoListScreen(
             containerColor = BackgroundLight,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    scope.launch {
-                        isRefreshing = true
-                        viewModel.refresh()
-                        isRefreshing = false
-                        snackbarHostState.showSnackbar(
-                            message = "✓ Base de datos actualizada",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxSize().padding(padding)
-            ) {
+            val searchQuery by viewModel.searchQuery.collectAsState()
+
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.searchQuery.value = it },
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                    placeholder = { Text("Buscar código, mina o supervisor...", color = TextTertiary) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryWood) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryWood,
+                        unfocusedBorderColor = DividerColor,
+                        focusedContainerColor = SurfaceContainer,
+                        unfocusedContainerColor = SurfaceContainer
+                    )
+                )
+
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        scope.launch {
+                            isRefreshing = true
+                            viewModel.refresh()
+                            isRefreshing = false
+                            snackbarHostState.showSnackbar(
+                                message = "✓ Base de datos actualizada",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) {
                 if (requerimientos.isEmpty()) {
                     EmptyStateBox(
                         icon = Icons.AutoMirrored.Filled.ListAlt,
@@ -177,6 +196,7 @@ fun RequerimientoListScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -249,9 +269,8 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
             ) {
                 Text(
                     text = req.codigo_req ?: "Sin código",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextTertiary
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (req.isPendingSync) {
@@ -271,14 +290,27 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
 
-            HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 10.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = req.fecha, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Terrain, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Mina: ${req.minaNombre}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                }
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                DetailRow(icon = Icons.Default.CalendarToday, text = req.fecha)
-                DetailRow(icon = Icons.Default.Terrain, text = req.minaNombre)
                 req.supervisorNombre?.let {
-                    DetailRow(icon = Icons.Default.Person, text = it)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Supervisor: $it", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    }
                 }
 
                 if (req.total_proveedor > 0 || req.total_mina > 0) {
