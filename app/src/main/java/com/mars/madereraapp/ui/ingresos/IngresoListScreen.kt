@@ -158,9 +158,8 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
             ) {
                 Text(
                     text = ing.codigo_ingreso ?: "Pendiente sync",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextTertiary
                 )
                 if (ing.isPendingSync) {
                     StatusBadge("Pendiente", ColorPending)
@@ -169,12 +168,40 @@ fun IngresoCard(ing: IngresoEntity, onClick: () -> Unit) {
                 }
             }
 
-            HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                DetailRow(icon = Icons.Default.CalendarToday, text = ing.fecha)
-                ing.viaje?.let { DetailRow(icon = Icons.Default.LocalShipping, text = "Viaje: $it") }
-                ing.vale?.let { DetailRow(icon = Icons.Default.Receipt, text = "Vale: $it") }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = ing.fecha, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                }
+                
+                ing.minas?.let {
+                    if (it.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Landscape, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Mina: $it", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        }
+                    }
+                }
+
+                ing.viaje?.let { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocalShipping, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Viaje: $it", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    }
+                }
+
+                ing.vale?.let { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Receipt, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Vale: $it", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    }
+                }
 
                 if (ing.total_proveedor > 0 || ing.total_mina > 0) {
                     Spacer(modifier = Modifier.height(4.dp))

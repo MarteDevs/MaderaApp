@@ -28,6 +28,7 @@ data class IngresoEntity(
     val observacion: String?,
     val total_proveedor: Double = 0.0,
     val total_mina: Double = 0.0,
+    val minas: String? = null,
     val isPendingSync: Boolean = false
 )
 
