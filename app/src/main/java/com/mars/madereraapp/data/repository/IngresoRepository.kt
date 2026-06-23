@@ -17,6 +17,7 @@ class IngresoRepository @Inject constructor(
     private val dao: IngresoDao
 ) {
     val ingresos: Flow<List<IngresoEntity>> = dao.getAllIngresos()
+    val ingresosByVale: Flow<List<IngresoEntity>> = dao.getAllIngresosByVale()
     val pendientes: Flow<List<RequerimientoPendienteEntity>> = dao.getRequerimientosPendientes()
 
     suspend fun refreshPendientes() {

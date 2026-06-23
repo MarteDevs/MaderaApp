@@ -16,6 +16,19 @@ interface RequerimientoDao {
     @Query("SELECT * FROM requerimientos ORDER BY localId DESC")
     fun getAllRequerimientos(): Flow<List<RequerimientoEntity>>
 
+    @Transaction
+    @Query("SELECT * FROM requerimientos WHERE isHidden = 0 ORDER BY localId DESC")
+    fun getVisibleRequerimientos(): Flow<List<RequerimientoEntity>>
+
+    @Query("SELECT localId FROM requerimientos WHERE isHidden = 1")
+    suspend fun getHiddenLocalIds(): List<Long>
+
+    @Query("SELECT * FROM requerimientos WHERE isHidden = 1")
+    suspend fun getHiddenRequerimientos(): List<RequerimientoEntity>
+
+    @Query("SELECT * FROM requerimientos")
+    suspend fun getAllRequerimientosSnapshot(): List<RequerimientoEntity>
+
     @Query("SELECT * FROM requerimientos_detalle WHERE localRequerimientoId = :localId")
     suspend fun getDetallesForRequerimiento(localId: Long): List<RequerimientoDetalleEntity>
 
@@ -36,4 +49,13 @@ interface RequerimientoDao {
 
     @Query("DELETE FROM requerimientos WHERE isPendingSync = 0")
     suspend fun clearSyncedRequerimientos()
+
+    @Query("UPDATE requerimientos SET isHidden = :hidden WHERE localId = :localId")
+    suspend fun setHidden(localId: Long, hidden: Boolean)
+
+    @Query("UPDATE requerimientos SET isHidden = 0 WHERE isHidden = 1")
+    suspend fun unhideAll()
+
+    @Query("SELECT COUNT(*) FROM requerimientos WHERE isHidden = 1")
+    fun getHiddenCount(): Flow<Int>
 }

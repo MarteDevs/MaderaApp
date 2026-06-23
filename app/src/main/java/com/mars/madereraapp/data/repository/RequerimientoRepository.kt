@@ -16,12 +16,21 @@ class RequerimientoRepository @Inject constructor(
     private val dao: RequerimientoDao
 ) {
     val requerimientos: Flow<List<RequerimientoEntity>> = dao.getAllRequerimientos()
+    val visibleRequerimientos: Flow<List<RequerimientoEntity>> = dao.getVisibleRequerimientos()
+    val hiddenCount: Flow<Int> = dao.getHiddenCount()
 
     suspend fun getDetalles(localId: Long) = dao.getDetallesForRequerimiento(localId)
 
     suspend fun fetchHistorial() {
         try {
             val remoteHistorial = apiService.getHistorial()
+            // Preserve hidden state before clearing (match by codigo_req)
+            val currentHiddenCodigos = mutableSetOf<String>()
+            dao.getAllRequerimientosSnapshot().forEach { entity ->
+                if (entity.isHidden && entity.codigo_req != null) {
+                    currentHiddenCodigos.add(entity.codigo_req)
+                }
+            }
             dao.clearSyncedRequerimientos()
             // Map remote to local entities
             // Note: This is a simple sync. In a real app we might want to be more careful.
@@ -37,7 +46,8 @@ class RequerimientoRepository @Inject constructor(
                     estado = item.estado,
                     total_proveedor = item.total_proveedor,
                     total_mina = item.total_mina,
-                    isPendingSync = false
+                    isPendingSync = false,
+                    isHidden = item.codigo_req in currentHiddenCodigos
                 )
                 dao.insertRequerimiento(entity)
             }
@@ -113,5 +123,13 @@ class RequerimientoRepository @Inject constructor(
             e.printStackTrace()
             Result.failure(e)
         }
+    }
+
+    suspend fun hideRequerimiento(localId: Long) {
+        dao.setHidden(localId, true)
+    }
+
+    suspend fun unhideAll() {
+        dao.unhideAll()
     }
 }

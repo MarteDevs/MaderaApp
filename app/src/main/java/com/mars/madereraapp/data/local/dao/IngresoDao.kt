@@ -27,6 +27,9 @@ interface IngresoDao {
     @Query("SELECT * FROM ingresos ORDER BY localId DESC")
     fun getAllIngresos(): Flow<List<IngresoEntity>>
 
+    @Query("SELECT * FROM ingresos ORDER BY CASE WHEN vale IS NULL OR vale = '' THEN 1 ELSE 0 END ASC, CAST(vale AS INTEGER) ASC, localId DESC")
+    fun getAllIngresosByVale(): Flow<List<IngresoEntity>>
+
     @Query("SELECT * FROM ingresos_detalle WHERE localIngresoId = :localId")
     suspend fun getDetallesForIngreso(localId: Long): List<IngresoDetalleEntity>
 

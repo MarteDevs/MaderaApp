@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mars.madereraapp.data.local.entities.RequerimientoEntity
 import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.theme.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -41,97 +43,81 @@ fun RequerimientoListScreen(
 ) {
     val requerimientos by viewModel.requerimientosFiltrados.collectAsState()
     val minas by viewModel.minas.collectAsState()
+    val supervisores by viewModel.supervisores.collectAsState()
+    val hiddenCount by viewModel.hiddenCount.collectAsState()
 
     val filtroEstado by viewModel.filtroEstado.collectAsState()
     val filtroMina by viewModel.filtroMina.collectAsState()
-    val filtroFecha by viewModel.filtroFecha.collectAsState()
+    val filtroSupervisor by viewModel.filtroSupervisor.collectAsState()
+    val filtroMes by viewModel.filtroMes.collectAsState()
+    val filtroAnio by viewModel.filtroAnio.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val aniosDisponibles by viewModel.aniosDisponibles.collectAsState()
 
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _, year, month, day ->
-            val dateStr = String.format("%04d-%02d-%02d", year, month + 1, day)
-            viewModel.filtroFecha.value = dateStr
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
+    var expandedEstado by remember { mutableStateOf(false) }
+    var expandedMina by remember { mutableStateOf(false) }
+    var expandedSupervisor by remember { mutableStateOf(false) }
+    var expandedMes by remember { mutableStateOf(false) }
+    var expandedAnio by remember { mutableStateOf(false) }
+
+    val mesesOpciones = listOf(
+        "" to "Todos", "01" to "Enero", "02" to "Febrero", "03" to "Marzo",
+        "04" to "Abril", "05" to "Mayo", "06" to "Junio", "07" to "Julio",
+        "08" to "Agosto", "09" to "Septiembre", "10" to "Octubre",
+        "11" to "Noviembre", "12" to "Diciembre"
     )
+
+    val estadoOpciones = listOf("TODOS", "PENDIENTE", "PARCIAL", "COMPLETADO")
+    val estadoLabels = mapOf("TODOS" to "Todos", "PENDIENTE" to "Pendientes", "PARCIAL" to "Parciales", "COMPLETADO" to "Completados")
 
     Scaffold(
         containerColor = BackgroundLight,
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth().background(BackgroundLight)) {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                "Requerimientos",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "${requerimientos.size} registros",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextTertiary
-                            )
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            "Requerimientos",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        val subtitle = buildString {
+                            append("${requerimientos.size} registros")
+                            if (hiddenCount > 0) {
+                                append(" · $hiddenCount ocultos")
+                            }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    FilterChipButton(
-                        text = "Todos",
-                        isActive = filtroEstado == "TODOS" && filtroMina == "TODAS" && filtroFecha == null,
-                        onClick = {
-                            viewModel.filtroEstado.value = "TODOS"
-                            viewModel.filtroMina.value = "TODAS"
-                            viewModel.filtroFecha.value = null
-                        }
-                    )
-
-                    FilterChipButton(
-                        text = "Pendientes",
-                        isActive = filtroEstado == "PENDIENTE",
-                        onClick = { viewModel.filtroEstado.value = if (filtroEstado == "PENDIENTE") "TODOS" else "PENDIENTE" }
-                    )
-
-                    minas.forEach { mina ->
-                        FilterChipButton(
-                            text = mina.nombre,
-                            isActive = filtroMina == mina.nombre,
-                            onClick = { viewModel.filtroMina.value = if (filtroMina == mina.nombre) "TODAS" else mina.nombre }
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (hiddenCount > 0) PrimaryWood else TextTertiary
                         )
                     }
-
-                    FilterChipButton(
-                        text = filtroFecha ?: "Fecha",
-                        isActive = filtroFecha != null,
-                        icon = Icons.Default.CalendarToday,
-                        onClick = { datePickerDialog.show() }
-                    )
-
-                    if (filtroFecha != null) {
-                        IconButton(
-                            onClick = { viewModel.filtroFecha.value = null },
-                            modifier = Modifier.size(32.dp)
+                },
+                actions = {
+                    if (hiddenCount > 0) {
+                        TextButton(
+                            onClick = { viewModel.unhideAll() }
                         ) {
-                            Icon(Icons.Default.Clear, contentDescription = "Limpiar fecha", tint = PrimaryWood, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                tint = PrimaryWood,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Mostrar $hiddenCount",
+                                color = PrimaryWood,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
-                }
-                HorizontalDivider(color = DividerColor)
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
+            )
         }
     ) { padding ->
         val snackbarHostState = remember { SnackbarHostState() }
@@ -142,24 +128,217 @@ fun RequerimientoListScreen(
             containerColor = BackgroundLight,
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            val searchQuery by viewModel.searchQuery.collectAsState()
 
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.searchQuery.value = it },
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                    placeholder = { Text("Buscar código, mina o supervisor...", color = TextTertiary) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryWood) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryWood,
-                        unfocusedBorderColor = DividerColor,
-                        focusedContainerColor = SurfaceContainer,
-                        unfocusedContainerColor = SurfaceContainer
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Row 1: Estado + Mina
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedEstado,
+                            onExpandedChange = { expandedEstado = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = estadoLabels[filtroEstado] ?: "Todos",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Estado", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedEstado,
+                                onDismissRequest = { expandedEstado = false }
+                            ) {
+                                estadoOpciones.forEach { opcion ->
+                                    DropdownMenuItem(
+                                        text = { Text(estadoLabels[opcion] ?: opcion) },
+                                        onClick = { viewModel.filtroEstado.value = opcion; expandedEstado = false }
+                                    )
+                                }
+                            }
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedMina,
+                            onExpandedChange = { expandedMina = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = if (filtroMina == "TODAS") "Todas" else filtroMina,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Mina", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMina) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedMina,
+                                onDismissRequest = { expandedMina = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Todas") },
+                                    onClick = { viewModel.filtroMina.value = "TODAS"; expandedMina = false }
+                                )
+                                minas.forEach { mina ->
+                                    DropdownMenuItem(
+                                        text = { Text(mina.nombre) },
+                                        onClick = { viewModel.filtroMina.value = mina.nombre; expandedMina = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Row 2: Supervisor + Mes + Año
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedSupervisor,
+                            onExpandedChange = { expandedSupervisor = it },
+                            modifier = Modifier.weight(1.2f)
+                        ) {
+                            OutlinedTextField(
+                                value = if (filtroSupervisor == "TODOS") "Todos" else filtroSupervisor,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Supervisor", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSupervisor) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedSupervisor,
+                                onDismissRequest = { expandedSupervisor = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Todos") },
+                                    onClick = { viewModel.filtroSupervisor.value = "TODOS"; expandedSupervisor = false }
+                                )
+                                supervisores.forEach { sup ->
+                                    DropdownMenuItem(
+                                        text = { Text(sup.nombre) },
+                                        onClick = { viewModel.filtroSupervisor.value = sup.nombre; expandedSupervisor = false }
+                                    )
+                                }
+                            }
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedMes,
+                            onExpandedChange = { expandedMes = it },
+                            modifier = Modifier.weight(0.9f)
+                        ) {
+                            OutlinedTextField(
+                                value = mesesOpciones.firstOrNull { it.first == filtroMes }?.second ?: "Todos",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Mes", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMes) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedMes,
+                                onDismissRequest = { expandedMes = false }
+                            ) {
+                                mesesOpciones.forEach { (valor, nombre) ->
+                                    DropdownMenuItem(
+                                        text = { Text(nombre) },
+                                        onClick = { viewModel.filtroMes.value = valor; expandedMes = false }
+                                    )
+                                }
+                            }
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedAnio,
+                            onExpandedChange = { expandedAnio = it },
+                            modifier = Modifier.weight(0.8f)
+                        ) {
+                            OutlinedTextField(
+                                value = filtroAnio.ifBlank { "Todos" },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Año", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAnio) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedAnio,
+                                onDismissRequest = { expandedAnio = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Todos") },
+                                    onClick = { viewModel.filtroAnio.value = ""; expandedAnio = false }
+                                )
+                                aniosDisponibles.forEach { anio ->
+                                    DropdownMenuItem(
+                                        text = { Text(anio) },
+                                        onClick = { viewModel.filtroAnio.value = anio; expandedAnio = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Row 3: Buscar por código de requerimiento
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.searchQuery.value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Buscar por código...", color = TextTertiary) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryWood) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryWood,
+                            unfocusedBorderColor = DividerColor,
+                            focusedContainerColor = SurfaceContainer,
+                            unfocusedContainerColor = SurfaceContainer
+                        )
                     )
-                )
+                }
 
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
@@ -180,7 +359,7 @@ fun RequerimientoListScreen(
                     EmptyStateBox(
                         icon = Icons.AutoMirrored.Filled.ListAlt,
                         title = "Sin requerimientos",
-                        subtitle = "Desliza hacia abajo para actualizar"
+                        subtitle = if (hiddenCount > 0) "$hiddenCount ocultos — toca \"Mostrar\" arriba" else "Desliza hacia abajo para actualizar"
                     )
                 } else {
                     LazyColumn(
@@ -188,11 +367,18 @@ fun RequerimientoListScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(requerimientos) { _, req ->
-                            RequerimientoCard(req, onClick = {
-                                val sid = req.serverId
-                                if (sid != null) onNavigateToDetail(sid)
-                            })
+                        itemsIndexed(
+                            items = requerimientos,
+                            key = { _, req -> req.localId }
+                        ) { _, req ->
+                            SwipeableRequerimientoItem(
+                                req = req,
+                                onClick = {
+                                    val sid = req.serverId
+                                    if (sid != null) onNavigateToDetail(sid)
+                                },
+                                onHide = { viewModel.hideRequerimiento(req.localId) }
+                            )
                         }
                     }
                 }
@@ -202,42 +388,101 @@ fun RequerimientoListScreen(
     }
 }
 
+/**
+ * Wraps a RequerimientoCard with SwipeToDismissBox.
+ * Only COMPLETADO items can be swiped to hide.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FilterChipButton(
-    text: String,
-    isActive: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    onClick: () -> Unit
+fun SwipeableRequerimientoItem(
+    req: RequerimientoEntity,
+    onClick: () -> Unit,
+    onHide: () -> Unit
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isActive) 1.03f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    val isCompletado = req.estado == "COMPLETADO"
+
+    if (!isCompletado) {
+        // Non-completado items are not swipeable
+        RequerimientoCard(req, onClick)
+        return
+    }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.StartToEnd) {
+                onHide()
+                true
+            } else {
+                false
+            }
+        },
+        positionalThreshold = { totalDistance -> totalDistance * 0.4f }
     )
 
-    Surface(
-        color = if (isActive) PrimaryWood.copy(alpha = 0.1f) else SurfaceContainer,
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(1.dp, if (isActive) PrimaryWood.copy(alpha = 0.4f) else DividerColor),
-        onClick = onClick,
-        modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
+    // Animate exit when dismissed
+    AnimatedVisibility(
+        visible = dismissState.currentValue == SwipeToDismissBoxValue.Settled,
+        exit = shrinkVertically(
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(200))
+    ) {
+        SwipeToDismissBox(
+            state = dismissState,
+            enableDismissFromStartToEnd = true,
+            enableDismissFromEndToStart = false,
+            backgroundContent = {
+                SwipeHideBackground(dismissState)
+            }
+        ) {
+            RequerimientoCard(req, onClick)
+        }
+    }
+
+    // If already dismissed (not Settled), just call the card invisible
+    if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+        // Item is being removed, the AnimatedVisibility handles the exit
+    }
+}
+
+/**
+ * Background shown while swiping — green with check icon and "Ocultar" text.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeHideBackground(dismissState: SwipeToDismissBoxState) {
+    val progress = dismissState.progress
+
+    val backgroundColor = ColorApproved.copy(alpha = (progress * 0.25f).coerceIn(0f, 0.2f))
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.alpha(progress.coerceIn(0f, 1f))
         ) {
-            if (icon != null) {
-                Icon(icon, contentDescription = null, tint = if (isActive) PrimaryWood else TextTertiary, modifier = Modifier.size(14.dp))
-            }
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = "Ocultar",
+                tint = ColorApproved,
+                modifier = Modifier.size(24.dp)
+            )
             Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isActive) PrimaryWood else TextSecondary,
-                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
+                "Ocultar",
+                color = ColorApproved,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
+
 
 @Composable
 fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
@@ -269,8 +514,9 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
             ) {
                 Text(
                     text = req.codigo_req ?: "Sin código",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextTertiary
+                    style = MaterialTheme.typography.bodyMedium, // Más pequeño
+                    color = TextSecondary,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (req.isPendingSync) {
@@ -290,31 +536,33 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(color = DividerColor.copy(alpha = 0.5f), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = req.fecha, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = req.fecha, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Terrain, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Mina: ${req.minaNombre}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    Icon(Icons.Default.Terrain, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = req.minaNombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
 
                 req.supervisorNombre?.let {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryWood, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Supervisor: $it", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        Icon(Icons.Default.Person, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text = it, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                     }
                 }
 
                 if (req.total_proveedor > 0 || req.total_mina > 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -322,15 +570,15 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                     ) {
                         Text(
                             text = "T. Prov: S/ ${"%.2f".format(req.total_proveedor)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = PrimaryWood, // Blue accent
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrimaryWood, // Highlight
+                            fontWeight = FontWeight.ExtraBold
                         )
                         Text(
                             text = "T. Mina: S/ ${"%.2f".format(req.total_mina)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = ColorApproved, // Green accent
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            color = ColorApproved, // Highlight
+                            fontWeight = FontWeight.ExtraBold
                         )
                     }
                 }

@@ -13,14 +13,20 @@ import com.mars.madereraapp.data.repository.IngresoRepository
 import com.mars.madereraapp.data.sync.UploadIngresoWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlin.OptIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+enum class OrdenIngreso { POR_FECHA, POR_VALE }
 
 @HiltViewModel
 class IngresoViewModel @Inject constructor(
@@ -28,24 +34,103 @@ class IngresoViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
+    private val _filtroMina = MutableStateFlow("")
+    val filtroMina = _filtroMina.asStateFlow()
 
-    val ingresos: StateFlow<List<IngresoEntity>> = combine(repository.ingresos, _searchQuery) { list, query ->
-        if (query.isBlank()) {
-            list
-        } else {
-            val q = query.lowercase()
-            list.filter {
-                (it.viaje?.lowercase()?.contains(q) == true) ||
-                (it.vale?.lowercase()?.contains(q) == true) ||
-                (it.minas?.lowercase()?.contains(q) == true)
-            }
-        }
+    private val _filtroViaje = MutableStateFlow("")
+    val filtroViaje = _filtroViaje.asStateFlow()
+
+    private val _filtroVale = MutableStateFlow("")
+    val filtroVale = _filtroVale.asStateFlow()
+
+    private val _filtroMes = MutableStateFlow("")   // "", "01", "02", ..., "12"
+    val filtroMes = _filtroMes.asStateFlow()
+
+    private val _filtroAnio = MutableStateFlow("")  // "", "2024", "2025", ...
+    val filtroAnio = _filtroAnio.asStateFlow()
+
+    private val _ordenActual = MutableStateFlow(OrdenIngreso.POR_FECHA)
+    val ordenActual = _ordenActual.asStateFlow()
+
+    val minasDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
+        list.mapNotNull { it.minas }
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .sorted()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
+    val viajesDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
+        list.mapNotNull { it.viaje }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .sorted()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val aniosDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
+        list.map { it.fecha.take(4) }
+            .filter { it.length == 4 }
+            .distinct()
+            .sortedDescending()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val ingresos: StateFlow<List<IngresoEntity>> = combine(
+        _ordenActual, _filtroMes, _filtroAnio
+    ) { orden, mes, anio -> Triple(orden, mes, anio) }
+        .flatMapLatest { (orden, mes, anio) ->
+            val sourceFlow = if (orden == OrdenIngreso.POR_VALE) repository.ingresosByVale else repository.ingresos
+            combine(
+                sourceFlow,
+                _filtroMina,
+                _filtroViaje,
+                _filtroVale
+            ) { list, mina, viaje, vale ->
+                var filtrado = list
+                if (mina.isNotBlank()) {
+                    filtrado = filtrado.filter { it.minas?.contains(mina, ignoreCase = true) == true }
+                }
+                if (viaje.isNotBlank()) {
+                    filtrado = filtrado.filter { it.viaje?.equals(viaje, ignoreCase = true) == true }
+                }
+                if (vale.isNotBlank()) {
+                    filtrado = filtrado.filter { it.vale?.contains(vale, ignoreCase = true) == true }
+                }
+                if (mes.isNotBlank()) {
+                    filtrado = filtrado.filter { it.fecha.length >= 7 && it.fecha.substring(5, 7) == mes }
+                }
+                if (anio.isNotBlank()) {
+                    filtrado = filtrado.filter { it.fecha.startsWith(anio) }
+                }
+                filtrado
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateFiltroMina(query: String) {
+        _filtroMina.value = query
+    }
+
+    fun updateFiltroViaje(query: String) {
+        _filtroViaje.value = query
+    }
+
+    fun updateFiltroVale(query: String) {
+        _filtroVale.value = query
+    }
+
+    fun updateFiltroMes(mes: String) {
+        _filtroMes.value = mes
+    }
+
+    fun updateFiltroAnio(anio: String) {
+        _filtroAnio.value = anio
+    }
+
+    fun toggleOrden() {
+        _ordenActual.value = if (_ordenActual.value == OrdenIngreso.POR_FECHA) OrdenIngreso.POR_VALE else OrdenIngreso.POR_FECHA
     }
 
     val pendientes: StateFlow<List<RequerimientoPendienteEntity>> = repository.pendientes

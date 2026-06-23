@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,38 +29,54 @@ class RequerimientoViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    // Raw list directly from DB
+    // Raw list directly from DB (all, including hidden)
     val requerimientosRaw: StateFlow<List<RequerimientoEntity>> = repository.requerimientos
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Hidden count from DB
+    val hiddenCount: StateFlow<Int> = repository.hiddenCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     // Filter states
     val filtroEstado = MutableStateFlow("TODOS")
     val filtroMina = MutableStateFlow("TODAS")
-    val filtroFecha = MutableStateFlow<String?>(null) // Format: "dd-MM-yyyy" or similar depending on DB
+    val filtroSupervisor = MutableStateFlow("TODOS")
+    val filtroMes = MutableStateFlow("")   // "", "01", "02", ..., "12"
+    val filtroAnio = MutableStateFlow("")  // "", "2024", "2025", ...
 
     val searchQuery = MutableStateFlow("")
 
-    // Filtered list to display in Requerimientos Tab
+    // Años disponibles extraídos dinámicamente del historial
+    val aniosDisponibles: StateFlow<List<String>> = repository.requerimientos.map { list ->
+        list.map { it.fecha.take(4) }
+            .filter { it.length == 4 }
+            .distinct()
+            .sortedDescending()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Filtered list to display in Requerimientos Tab (excludes hidden)
     val requerimientosFiltrados: StateFlow<List<RequerimientoEntity>> = combine(
-        requerimientosRaw,
+        repository.visibleRequerimientos,
         filtroEstado,
         filtroMina,
-        filtroFecha,
+        filtroMes,
         searchQuery
-    ) { list, estado, mina, fecha, query ->
+    ) { list, estado, mina, mes, query ->
+        val supervisor = filtroSupervisor.value
+        val anio = filtroAnio.value
         list.filter { req ->
             val matchesEstado = if (estado == "TODOS") true else req.estado == estado
             val matchesMina = if (mina == "TODAS") true else req.minaNombre == mina
-            val matchesFecha = if (fecha == null) true else req.fecha.contains(fecha)
+            val matchesSupervisor = if (supervisor == "TODOS") true else req.supervisorNombre == supervisor
+            val matchesMes = if (mes.isBlank()) true else req.fecha.length >= 7 && req.fecha.substring(5, 7) == mes
+            val matchesAnio = if (anio.isBlank()) true else req.fecha.startsWith(anio)
             
             val q = query.lowercase()
             val matchesQuery = if (q.isBlank()) true else {
-                (req.codigo_req?.lowercase()?.contains(q) == true) ||
-                (req.minaNombre.lowercase().contains(q)) ||
-                (req.supervisorNombre?.lowercase()?.contains(q) == true)
+                (req.codigo_req?.lowercase()?.contains(q) == true)
             }
 
-            matchesEstado && matchesMina && matchesFecha && matchesQuery
+            matchesEstado && matchesMina && matchesSupervisor && matchesMes && matchesAnio && matchesQuery
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -101,6 +118,20 @@ class RequerimientoViewModel @Inject constructor(
                 e.printStackTrace()
             }
             repository.fetchHistorial()
+        }
+    }
+
+    /** Ocultar un requerimiento completado (persistente en Room) */
+    fun hideRequerimiento(localId: Long) {
+        viewModelScope.launch {
+            repository.hideRequerimiento(localId)
+        }
+    }
+
+    /** Mostrar todos los requerimientos ocultos */
+    fun unhideAll() {
+        viewModelScope.launch {
+            repository.unhideAll()
         }
     }
 
