@@ -10,6 +10,7 @@ import com.mars.madereraapp.data.local.entities.RequerimientoDetalleEntity
 import com.mars.madereraapp.data.local.entities.RequerimientoEntity
 import com.mars.madereraapp.data.repository.CatalogRepository
 import com.mars.madereraapp.data.repository.RequerimientoRepository
+import com.mars.madereraapp.data.repository.IngresoRepository
 import com.mars.madereraapp.data.sync.UploadRequerimientoWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class RequerimientoViewModel @Inject constructor(
     private val repository: RequerimientoRepository,
     private val catalogRepository: CatalogRepository,
+    private val ingresoRepository: IngresoRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -102,6 +104,37 @@ class RequerimientoViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val articulos = catalogRepository.getArticulos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // New metrics for Dashboard
+    val totalArticulos: StateFlow<Int> = catalogRepository.getArticulos()
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val itemsPorEntregar: StateFlow<Int> = ingresoRepository.pendientes
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val requerimientosConPendiente: StateFlow<Int> = ingresoRepository.pendientes
+        .map { list -> list.map { it.codigo_req }.distinct().size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val totalProveedorPendiente: StateFlow<Double> = repository.requerimientos
+        .map { list ->
+            list.filter { it.estado == "PENDIENTE" || it.estado == "PARCIAL" }
+                .sumOf { it.total_proveedor }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalMinaPendiente: StateFlow<Double> = repository.requerimientos
+        .map { list ->
+            list.filter { it.estado == "PENDIENTE" || it.estado == "PARCIAL" }
+                .sumOf { it.total_mina }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val ultimosRequerimientos: StateFlow<List<RequerimientoEntity>> = repository.requerimientos
+        .map { it.take(5) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val proveedores = catalogRepository.getProveedores()
