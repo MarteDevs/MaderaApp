@@ -36,6 +36,7 @@ import com.mars.madereraapp.ui.components.*
 import com.mars.madereraapp.ui.ingresos.IngresoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoListScreen
 import com.mars.madereraapp.ui.requerimientos.RequerimientoViewModel
+import com.mars.madereraapp.ui.analisis.AnalisisScreen
 import com.mars.madereraapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -168,7 +169,8 @@ fun MainScreen(
                 val tabs = listOf(
                     Triple(0, Icons.Default.Home, "Inicio"),
                     Triple(1, Icons.AutoMirrored.Filled.ListAlt, "Requerimientos"),
-                    Triple(2, Icons.Default.Inventory, "Ingresos")
+                    Triple(2, Icons.Default.Inventory, "Ingresos"),
+                    Triple(3, Icons.Default.Analytics, "Análisis")
                 )
 
                 tabs.forEach { (index, icon, label) ->
@@ -253,8 +255,15 @@ fun MainScreen(
                         viewModel = requerimientoViewModel,
                         onNavigateToRequerimientoDetalle = onNavigateToRequerimientoDetalle
                     )
-                    1 -> RequerimientoListScreen(onNavigateToDetail = onNavigateToRequerimientoDetalle, viewModel = requerimientoViewModel)
-                    2 -> IngresoListScreen(onNavigateToCreate = onNavigateToNuevoIngreso, onNavigateToDetail = onNavigateToIngresoDetalle)
+                    1 -> RequerimientoListScreen(
+                        onNavigateToDetail = onNavigateToRequerimientoDetalle, 
+                        viewModel = requerimientoViewModel
+                    )
+                    2 -> IngresoListScreen(
+                        onNavigateToCreate = onNavigateToNuevoIngreso, 
+                        onNavigateToDetail = onNavigateToIngresoDetalle
+                    )
+                    3 -> AnalisisScreen()
                 }
             }
         }
