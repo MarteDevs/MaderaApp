@@ -43,6 +43,7 @@ class RequerimientoViewModel @Inject constructor(
     val filtroEstado = MutableStateFlow("TODOS")
     val filtroMina = MutableStateFlow("TODAS")
     val filtroSupervisor = MutableStateFlow("TODOS")
+    val filtroProveedor = MutableStateFlow("TODOS")
     val filtroMes = MutableStateFlow("")   // "", "01", "02", ..., "12"
     val filtroAnio = MutableStateFlow("")  // "", "2024", "2025", ...
 
@@ -56,29 +57,37 @@ class RequerimientoViewModel @Inject constructor(
             .sortedDescending()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private data class FiltrosReq(
+        val estado: String,
+        val mina: String,
+        val prov: String,
+        val mes: String,
+        val query: String
+    )
+
     // Filtered list to display in Requerimientos Tab (excludes hidden)
     val requerimientosFiltrados: StateFlow<List<RequerimientoEntity>> = combine(
         repository.visibleRequerimientos,
-        filtroEstado,
-        filtroMina,
-        filtroMes,
-        searchQuery
-    ) { list, estado, mina, mes, query ->
+        combine(filtroEstado, filtroMina, filtroProveedor, filtroMes, searchQuery) { estado, mina, prov, mes, query ->
+            FiltrosReq(estado, mina, prov, mes, query)
+        }
+    ) { list, filtros ->
         val supervisor = filtroSupervisor.value
         val anio = filtroAnio.value
         list.filter { req ->
-            val matchesEstado = if (estado == "TODOS") true else req.estado == estado
-            val matchesMina = if (mina == "TODAS") true else req.minaNombre == mina
+            val matchesEstado = if (filtros.estado == "TODOS") true else req.estado == filtros.estado
+            val matchesMina = if (filtros.mina == "TODAS") true else req.minaNombre == filtros.mina
             val matchesSupervisor = if (supervisor == "TODOS") true else req.supervisorNombre == supervisor
-            val matchesMes = if (mes.isBlank()) true else req.fecha.length >= 7 && req.fecha.substring(5, 7) == mes
+            val matchesProveedor = if (filtros.prov == "TODOS") true else req.proveedores?.contains(filtros.prov, ignoreCase = true) == true
+            val matchesMes = if (filtros.mes.isBlank()) true else req.fecha.length >= 7 && req.fecha.substring(5, 7) == filtros.mes
             val matchesAnio = if (anio.isBlank()) true else req.fecha.startsWith(anio)
             
-            val q = query.lowercase()
+            val q = filtros.query.lowercase()
             val matchesQuery = if (q.isBlank()) true else {
                 (req.codigo_req?.lowercase()?.contains(q) == true)
             }
 
-            matchesEstado && matchesMina && matchesSupervisor && matchesMes && matchesAnio && matchesQuery
+            matchesEstado && matchesMina && matchesSupervisor && matchesProveedor && matchesMes && matchesAnio && matchesQuery
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

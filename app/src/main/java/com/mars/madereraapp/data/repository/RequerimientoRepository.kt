@@ -47,7 +47,8 @@ class RequerimientoRepository @Inject constructor(
                     total_proveedor = item.total_proveedor,
                     total_mina = item.total_mina,
                     isPendingSync = false,
-                    isHidden = item.codigo_req in currentHiddenCodigos
+                    isHidden = item.codigo_req in currentHiddenCodigos,
+                    proveedores = item.proveedores
                 )
                 dao.insertRequerimiento(entity)
             }

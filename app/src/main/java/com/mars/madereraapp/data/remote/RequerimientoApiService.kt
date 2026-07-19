@@ -34,7 +34,8 @@ data class RequerimientoHistorialItem(
     val supervisor: String?,
     val estado: String,
     val total_proveedor: Double,
-    val total_mina: Double
+    val total_mina: Double,
+    val proveedores: String?
 )
 
 data class RequerimientoDetalleItem(

@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -49,14 +50,17 @@ fun RequerimientoListScreen(
     val filtroEstado by viewModel.filtroEstado.collectAsState()
     val filtroMina by viewModel.filtroMina.collectAsState()
     val filtroSupervisor by viewModel.filtroSupervisor.collectAsState()
+    val filtroProveedor by viewModel.filtroProveedor.collectAsState()
     val filtroMes by viewModel.filtroMes.collectAsState()
     val filtroAnio by viewModel.filtroAnio.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val aniosDisponibles by viewModel.aniosDisponibles.collectAsState()
+    val proveedores by viewModel.proveedores.collectAsState()
 
     var expandedEstado by remember { mutableStateOf(false) }
     var expandedMina by remember { mutableStateOf(false) }
     var expandedSupervisor by remember { mutableStateOf(false) }
+    var expandedProveedor by remember { mutableStateOf(false) }
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
 
@@ -209,12 +213,12 @@ fun RequerimientoListScreen(
                         }
                     }
 
-                    // Row 2: Supervisor + Mes + Año
+                    // Row 2: Supervisor + Proveedor
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ExposedDropdownMenuBox(
                             expanded = expandedSupervisor,
                             onExpandedChange = { expandedSupervisor = it },
-                            modifier = Modifier.weight(1.2f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             OutlinedTextField(
                                 value = if (filtroSupervisor == "TODOS") "Todos" else filtroSupervisor,
@@ -250,9 +254,50 @@ fun RequerimientoListScreen(
                         }
 
                         ExposedDropdownMenuBox(
+                            expanded = expandedProveedor,
+                            onExpandedChange = { expandedProveedor = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = if (filtroProveedor == "TODOS") "Todos" else filtroProveedor,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Proveedor", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedProveedor) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedProveedor,
+                                onDismissRequest = { expandedProveedor = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Todos") },
+                                    onClick = { viewModel.filtroProveedor.value = "TODOS"; expandedProveedor = false }
+                                )
+                                proveedores.forEach { prov ->
+                                    DropdownMenuItem(
+                                        text = { Text(prov.nombre) },
+                                        onClick = { viewModel.filtroProveedor.value = prov.nombre; expandedProveedor = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Row 3: Mes + Año + Botón Limpiar
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        ExposedDropdownMenuBox(
                             expanded = expandedMes,
                             onExpandedChange = { expandedMes = it },
-                            modifier = Modifier.weight(0.9f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             OutlinedTextField(
                                 value = mesesOpciones.firstOrNull { it.first == filtroMes }?.second ?: "Todos",
@@ -286,7 +331,7 @@ fun RequerimientoListScreen(
                         ExposedDropdownMenuBox(
                             expanded = expandedAnio,
                             onExpandedChange = { expandedAnio = it },
-                            modifier = Modifier.weight(0.8f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             OutlinedTextField(
                                 value = filtroAnio.ifBlank { "Todos" },
@@ -320,9 +365,31 @@ fun RequerimientoListScreen(
                                 }
                             }
                         }
+                        
+                        // Clear button
+                        if (filtroEstado != "TODOS" || filtroMina != "TODAS" || filtroSupervisor != "TODOS" || filtroProveedor != "TODOS" || filtroMes.isNotBlank() || filtroAnio.isNotBlank() || searchQuery.isNotBlank()) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.filtroEstado.value = "TODOS"
+                                    viewModel.filtroMina.value = "TODAS"
+                                    viewModel.filtroSupervisor.value = "TODOS"
+                                    viewModel.filtroProveedor.value = "TODOS"
+                                    viewModel.filtroMes.value = ""
+                                    viewModel.filtroAnio.value = ""
+                                    viewModel.searchQuery.value = ""
+                                },
+                                modifier = Modifier
+                                    .padding(top = 6.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SurfaceContainer)
+                                    .size(48.dp)
+                            ) {
+                                Icon(Icons.Default.Clear, contentDescription = "Limpiar", tint = TextSecondary)
+                            }
+                        }
                     }
 
-                    // Row 3: Buscar por código de requerimiento
+                    // Row 4: Buscar por código de requerimiento
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.searchQuery.value = it },
@@ -383,6 +450,68 @@ fun RequerimientoListScreen(
                     }
                 }
             }
+
+            // Barra Fija de Resumen
+            if (filtroMes.isNotBlank() || filtroAnio.isNotBlank()) {
+                val totalMina = requerimientos.sumOf { it.total_mina }
+                val totalProv = requerimientos.sumOf { it.total_proveedor }
+                
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = SurfaceContainer,
+                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 16.dp)
+                    ) {
+                        Text(
+                            text = "Resumen del periodo",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = TextTertiary,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Total Proveedor:",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                            Text(
+                                String.format("S/ %,.2f", totalProv),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PrimaryWood,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Total Mina:",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                            Text(
+                                String.format("S/ %,.2f", totalMina),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+            
             }
         }
     }

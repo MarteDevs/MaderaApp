@@ -1,6 +1,7 @@
 package com.mars.madereraapp.ui.ingresos
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.interaction.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -105,14 +108,17 @@ fun IngresoListScreen(
             val filtroMina by viewModel.filtroMina.collectAsState()
             val filtroViaje by viewModel.filtroViaje.collectAsState()
             val filtroVale by viewModel.filtroVale.collectAsState()
+            val filtroProveedor by viewModel.filtroProveedor.collectAsState()
             val filtroMes by viewModel.filtroMes.collectAsState()
             val filtroAnio by viewModel.filtroAnio.collectAsState()
             val minasDisponibles by viewModel.minasDisponibles.collectAsState()
             val viajesDisponibles by viewModel.viajesDisponibles.collectAsState()
+            val proveedoresDisponibles by viewModel.proveedoresDisponibles.collectAsState()
             val aniosDisponibles by viewModel.aniosDisponibles.collectAsState()
 
             var expandedMina by remember { mutableStateOf(false) }
             var expandedViaje by remember { mutableStateOf(false) }
+            var expandedProveedor by remember { mutableStateOf(false) }
             var expandedMes by remember { mutableStateOf(false) }
             var expandedAnio by remember { mutableStateOf(false) }
 
@@ -204,134 +210,251 @@ fun IngresoListScreen(
                         }
                     }
 
-                    // Row 2: Mes + Año
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ExposedDropdownMenuBox(
-                            expanded = expandedMes,
-                            onExpandedChange = { expandedMes = it },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            OutlinedTextField(
-                                value = mesesOpciones.firstOrNull { it.first == filtroMes }?.second ?: "Todos",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Mes", style = MaterialTheme.typography.labelSmall) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMes) },
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = PrimaryWood,
-                                    unfocusedBorderColor = DividerColor,
-                                    focusedContainerColor = SurfaceContainer,
-                                    unfocusedContainerColor = SurfaceContainer
-                                ),
-                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expandedMes,
-                                onDismissRequest = { expandedMes = false }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            ExposedDropdownMenuBox(
+                                expanded = expandedProveedor,
+                                onExpandedChange = { expandedProveedor = it },
+                                modifier = Modifier.weight(1f)
                             ) {
-                                mesesOpciones.forEach { (valor, nombre) ->
-                                    DropdownMenuItem(
-                                        text = { Text(nombre) },
-                                        onClick = { viewModel.updateFiltroMes(valor); expandedMes = false }
-                                    )
-                                }
-                            }
-                        }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expandedAnio,
-                            onExpandedChange = { expandedAnio = it },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            OutlinedTextField(
-                                value = filtroAnio.ifBlank { "Todos" },
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Año", style = MaterialTheme.typography.labelSmall) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAnio) },
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = PrimaryWood,
-                                    unfocusedBorderColor = DividerColor,
-                                    focusedContainerColor = SurfaceContainer,
-                                    unfocusedContainerColor = SurfaceContainer
-                                ),
-                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expandedAnio,
-                                onDismissRequest = { expandedAnio = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Todos") },
-                                    onClick = { viewModel.updateFiltroAnio(""); expandedAnio = false }
+                                OutlinedTextField(
+                                    value = filtroProveedor.ifBlank { "Todos" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Proveedor", style = MaterialTheme.typography.labelSmall) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedProveedor) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = PrimaryWood,
+                                        unfocusedBorderColor = DividerColor,
+                                        focusedContainerColor = SurfaceContainer,
+                                        unfocusedContainerColor = SurfaceContainer
+                                    ),
+                                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp)
                                 )
-                                aniosDisponibles.forEach { anio ->
+                                ExposedDropdownMenu(
+                                    expanded = expandedProveedor,
+                                    onDismissRequest = { expandedProveedor = false }
+                                ) {
                                     DropdownMenuItem(
-                                        text = { Text(anio) },
-                                        onClick = { viewModel.updateFiltroAnio(anio); expandedAnio = false }
+                                        text = { Text("Todos") },
+                                        onClick = { viewModel.updateFiltroProveedor(""); expandedProveedor = false }
                                     )
+                                    proveedoresDisponibles.forEach { prov ->
+                                        DropdownMenuItem(
+                                            text = { Text(prov) },
+                                            onClick = { viewModel.updateFiltroProveedor(prov); expandedProveedor = false }
+                                        )
+                                    }
+                                }
+                            }
+
+                            ExposedDropdownMenuBox(
+                                expanded = expandedMes,
+                                onExpandedChange = { expandedMes = it },
+                                modifier = Modifier.weight(0.8f)
+                            ) {
+                                OutlinedTextField(
+                                    value = mesesOpciones.firstOrNull { it.first == filtroMes }?.second ?: "Todos",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Mes", style = MaterialTheme.typography.labelSmall) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMes) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = PrimaryWood,
+                                        unfocusedBorderColor = DividerColor,
+                                        focusedContainerColor = SurfaceContainer,
+                                        unfocusedContainerColor = SurfaceContainer
+                                    ),
+                                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expandedMes,
+                                    onDismissRequest = { expandedMes = false }
+                                ) {
+                                    mesesOpciones.forEach { (valor, nombre) ->
+                                        DropdownMenuItem(
+                                            text = { Text(nombre) },
+                                            onClick = { viewModel.updateFiltroMes(valor); expandedMes = false }
+                                        )
+                                    }
+                                }
+                            }
+
+                            ExposedDropdownMenuBox(
+                                expanded = expandedAnio,
+                                onExpandedChange = { expandedAnio = it },
+                                modifier = Modifier.weight(0.8f)
+                            ) {
+                                OutlinedTextField(
+                                    value = filtroAnio.ifBlank { "Todos" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Año", style = MaterialTheme.typography.labelSmall) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAnio) },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = PrimaryWood,
+                                        unfocusedBorderColor = DividerColor,
+                                        focusedContainerColor = SurfaceContainer,
+                                        unfocusedContainerColor = SurfaceContainer
+                                    ),
+                                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expandedAnio,
+                                    onDismissRequest = { expandedAnio = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Todos") },
+                                        onClick = { viewModel.updateFiltroAnio(""); expandedAnio = false }
+                                    )
+                                    aniosDisponibles.forEach { anio ->
+                                        DropdownMenuItem(
+                                            text = { Text(anio) },
+                                            onClick = { viewModel.updateFiltroAnio(anio); expandedAnio = false }
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (filtroMina.isNotBlank() || filtroViaje.isNotBlank() || filtroVale.isNotBlank() || filtroProveedor.isNotBlank() || filtroMes.isNotBlank() || filtroAnio.isNotBlank()) {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.updateFiltroMina("")
+                                        viewModel.updateFiltroViaje("")
+                                        viewModel.updateFiltroVale("")
+                                        viewModel.updateFiltroProveedor("")
+                                        viewModel.updateFiltroMes("")
+                                        viewModel.updateFiltroAnio("")
+                                    },
+                                    modifier = Modifier
+                                        .padding(top = 6.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(SurfaceContainer)
+                                        .size(48.dp)
+                                ) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Limpiar", tint = TextSecondary)
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = filtroVale,
+                            onValueChange = { viewModel.updateFiltroVale(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Buscar por vale...", color = TextTertiary) },
+                            leadingIcon = { Icon(Icons.Default.Receipt, contentDescription = null, tint = PrimaryWood) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = PrimaryWood,
+                                unfocusedBorderColor = DividerColor,
+                                focusedContainerColor = SurfaceContainer,
+                                unfocusedContainerColor = SurfaceContainer
+                            )
+                        )
+                    }
+
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            scope.launch {
+                                isRefreshing = true
+                                viewModel.refresh()
+                                isRefreshing = false
+                                snackbarHostState.showSnackbar(
+                                    message = "✓ Datos de ingresos actualizados",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize().weight(1f)
+                    ) {
+                        if (ingresos.isEmpty()) {
+                            EmptyStateBox(
+                                icon = Icons.Default.Inventory,
+                                title = "Sin ingresos registrados",
+                                subtitle = "Desliza hacia abajo para actualizar"
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                itemsIndexed(ingresos) { _, ing ->
+                                    IngresoCard(ing, onClick = {
+                                        val sid = ing.serverId
+                                        if (sid != null) onNavigateToDetail(sid)
+                                    })
                                 }
                             }
                         }
                     }
 
-                    OutlinedTextField(
-                        value = filtroVale,
-                        onValueChange = { viewModel.updateFiltroVale(it) },
+                if (filtroMes.isNotBlank() || filtroAnio.isNotBlank() || filtroProveedor.isNotBlank()) {
+                    val totalMina = ingresos.sumOf { it.total_mina }
+                    val totalProv = ingresos.sumOf { it.total_proveedor }
+                    
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar por vale...", color = TextTertiary) },
-                        leadingIcon = { Icon(Icons.Default.Receipt, contentDescription = null, tint = PrimaryWood) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryWood,
-                            unfocusedBorderColor = DividerColor,
-                            focusedContainerColor = SurfaceContainer,
-                            unfocusedContainerColor = SurfaceContainer
-                        )
-                    )
-                }
-
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        scope.launch {
-                            isRefreshing = true
-                            viewModel.refresh()
-                            isRefreshing = false
-                            snackbarHostState.showSnackbar(
-                                message = "✓ Datos de ingresos actualizados",
-                                duration = SnackbarDuration.Short
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                if (ingresos.isEmpty()) {
-                    EmptyStateBox(
-                        icon = Icons.Default.Inventory,
-                        title = "Sin ingresos registrados",
-                        subtitle = "Desliza hacia abajo para actualizar"
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        color = SurfaceContainer,
+                        shadowElevation = 8.dp,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
                     ) {
-                        itemsIndexed(ingresos) { _, ing ->
-                            IngresoCard(ing, onClick = {
-                                val sid = ing.serverId
-                                if (sid != null) onNavigateToDetail(sid)
-                            })
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                        ) {
+                            Text(
+                                text = "Resumen del periodo",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = TextTertiary,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Total Proveedor:",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    String.format("S/ %,.2f", totalProv),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = PrimaryWood,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Total Mina:",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    String.format("S/ %,.2f", totalMina),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color(0xFF4CAF50),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
-            }
             }
         }
     }

@@ -43,6 +43,9 @@ class IngresoViewModel @Inject constructor(
     private val _filtroVale = MutableStateFlow("")
     val filtroVale = _filtroVale.asStateFlow()
 
+    private val _filtroProveedor = MutableStateFlow("")
+    val filtroProveedor = _filtroProveedor.asStateFlow()
+
     private val _filtroMes = MutableStateFlow("")   // "", "01", "02", ..., "12"
     val filtroMes = _filtroMes.asStateFlow()
 
@@ -69,6 +72,15 @@ class IngresoViewModel @Inject constructor(
             .sorted()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val proveedoresDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
+        list.mapNotNull { it.proveedores }
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .sorted()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val aniosDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
         list.map { it.fecha.take(4) }
             .filter { it.length == 4 }
@@ -86,8 +98,9 @@ class IngresoViewModel @Inject constructor(
                 sourceFlow,
                 _filtroMina,
                 _filtroViaje,
-                _filtroVale
-            ) { list, mina, viaje, vale ->
+                _filtroVale,
+                _filtroProveedor
+            ) { list, mina, viaje, vale, prov ->
                 var filtrado = list
                 if (mina.isNotBlank()) {
                     filtrado = filtrado.filter { it.minas?.contains(mina, ignoreCase = true) == true }
@@ -97,6 +110,9 @@ class IngresoViewModel @Inject constructor(
                 }
                 if (vale.isNotBlank()) {
                     filtrado = filtrado.filter { it.vale?.contains(vale, ignoreCase = true) == true }
+                }
+                if (prov.isNotBlank()) {
+                    filtrado = filtrado.filter { it.proveedores?.contains(prov, ignoreCase = true) == true }
                 }
                 if (mes.isNotBlank()) {
                     filtrado = filtrado.filter { it.fecha.length >= 7 && it.fecha.substring(5, 7) == mes }
@@ -119,6 +135,10 @@ class IngresoViewModel @Inject constructor(
 
     fun updateFiltroVale(query: String) {
         _filtroVale.value = query
+    }
+
+    fun updateFiltroProveedor(query: String) {
+        _filtroProveedor.value = query
     }
 
     fun updateFiltroMes(mes: String) {
