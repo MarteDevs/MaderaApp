@@ -61,6 +61,7 @@ class IngresoRepository @Inject constructor(
         viaje: String?,
         vale: String?,
         observacion: String?,
+        tipoPago: String?,
         detalles: List<IngresoDetalleEntity>
     ): Long {
         val ingreso = IngresoEntity(
@@ -68,6 +69,7 @@ class IngresoRepository @Inject constructor(
             viaje = viaje,
             vale = vale,
             observacion = observacion,
+            tipoPago = tipoPago,
             isPendingSync = true
         )
         val localId = dao.insertIngreso(ingreso)
@@ -85,6 +87,7 @@ class IngresoRepository @Inject constructor(
             viaje = ingreso.viaje,
             vale = ingreso.vale,
             observacion = ingreso.observacion,
+            tipo_pago = ingreso.tipoPago,
             detalles = detalles.map {
                 IngresoDetalleRequest(
                     requerimiento_detalle_id = it.requerimiento_detalle_id,

@@ -190,11 +190,12 @@ class IngresoViewModel @Inject constructor(
         viaje: String?,
         vale: String?,
         observacion: String?,
+        tipoPago: String?,
         detalles: List<IngresoDetalleEntity>
     ) {
         viewModelScope.launch {
             val localId = repository.guardarIngresoLocal(
-                fecha, viaje, vale, observacion, detalles
+                fecha, viaje, vale, observacion, tipoPago, detalles
             )
             // Programar subida
             val uploadRequest = OneTimeWorkRequestBuilder<UploadIngresoWorker>()

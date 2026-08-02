@@ -10,6 +10,7 @@ data class IngresoRequest(
     val viaje: String?,
     val vale: String?,
     val observacion: String?,
+    val tipo_pago: String? = null,
     val detalles: List<IngresoDetalleRequest>
 )
 

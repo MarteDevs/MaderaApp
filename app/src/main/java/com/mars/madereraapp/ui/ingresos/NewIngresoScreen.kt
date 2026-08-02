@@ -34,6 +34,7 @@ fun NewIngresoScreen(
 
     var viaje by remember { mutableStateOf("") }
     var vale by remember { mutableStateOf("") }
+    var tipoPago by remember { mutableStateOf<String?>(null) }
     val seleccionados = remember { mutableStateMapOf<Int, Double>() }
 
     val itemsSeleccionados = seleccionados.count { it.value > 0 }
@@ -135,6 +136,30 @@ fun NewIngresoScreen(
                         }
                     )
                 }
+
+                // Destino / Tipo de Pago
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = tipoPago == "DEPOSITO",
+                        onClick = { tipoPago = if (tipoPago == "DEPOSITO") null else "DEPOSITO" },
+                        label = { Text("DEPÓSITO", style = MaterialTheme.typography.labelSmall) }
+                    )
+                    FilterChip(
+                        selected = tipoPago == "DIRECTO",
+                        onClick = { tipoPago = if (tipoPago == "DIRECTO") null else "DIRECTO" },
+                        label = { Text("DIRECTO", style = MaterialTheme.typography.labelSmall) }
+                    )
+                    if (tipoPago == null) {
+                        Text(
+                            text = "Normal (Proveedor)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextTertiary
+                        )
+                    }
+                }
             }
 
             HorizontalDivider(color = DividerColor, modifier = Modifier.padding(horizontal = 16.dp))
@@ -223,6 +248,7 @@ fun NewIngresoScreen(
                                         viaje = viaje.ifBlank { null },
                                         vale = vale.ifBlank { null },
                                         observacion = "Registro desde App Móvil",
+                                        tipoPago = tipoPago,
                                         detalles = detalles
                                     )
                                     android.widget.Toast.makeText(
