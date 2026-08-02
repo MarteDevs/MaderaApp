@@ -23,7 +23,8 @@ data class RequerimientoEntity(
     val total_mina: Double = 0.0,
     val isPendingSync: Boolean = false,
     val isHidden: Boolean = false,
-    val proveedores: String? = null
+    val proveedores: String? = null,
+    val tipoPago: String? = null
 )
 
 @Entity(

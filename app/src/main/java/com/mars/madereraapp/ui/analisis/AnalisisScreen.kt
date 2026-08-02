@@ -5,6 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +28,7 @@ fun AnalisisScreen(
 ) {
     val filtroMes by viewModel.filtroMes.collectAsState()
     val filtroAnio by viewModel.filtroAnio.collectAsState()
+    val filtroDestino by viewModel.filtroDestino.collectAsState()
     val aniosDisponibles by viewModel.aniosDisponibles.collectAsState()
     
     val totalProvReq by viewModel.totalProveedorReq.collectAsState()
@@ -31,6 +38,7 @@ fun AnalisisScreen(
 
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
+    var expandedDestino by remember { mutableStateOf(false) }
 
     val mesesOpciones = listOf(
         "" to "Todos", "01" to "Enero", "02" to "Febrero", "03" to "Marzo",
@@ -38,6 +46,9 @@ fun AnalisisScreen(
         "08" to "Agosto", "09" to "Septiembre", "10" to "Octubre",
         "11" to "Noviembre", "12" to "Diciembre"
     )
+
+    val destinoOpciones = listOf("TODOS", "DEPOSITO", "DIRECTO")
+    val destinoLabels = mapOf("TODOS" to "Todos", "DEPOSITO" to "Depósito", "DIRECTO" to "Directo")
 
     Scaffold(
         containerColor = BackgroundLight,
@@ -146,6 +157,42 @@ fun AnalisisScreen(
                         }
                     }
                 }
+
+                ExposedDropdownMenuBox(
+                    expanded = expandedDestino,
+                    onExpandedChange = { expandedDestino = it },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    OutlinedTextField(
+                        value = destinoLabels[filtroDestino] ?: "Todos",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Destino", style = MaterialTheme.typography.labelSmall) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDestino) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = PrimaryWood,
+                            unfocusedBorderColor = DividerColor,
+                            focusedContainerColor = SurfaceContainer,
+                            unfocusedContainerColor = SurfaceContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDestino,
+                        onDismissRequest = { expandedDestino = false }
+                    ) {
+                        destinoOpciones.forEach { opcion ->
+                            DropdownMenuItem(
+                                text = { Text(destinoLabels[opcion] ?: opcion) },
+                                onClick = {
+                                    viewModel.updateFiltroDestino(opcion)
+                                    expandedDestino = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -165,35 +212,75 @@ fun AnalisisScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Card(
-                    modifier = Modifier.weight(1f).height(110.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF))
+                    modifier = Modifier.weight(1f).height(120.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxSize(),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("GASTO PROVEEDOR", style = MaterialTheme.typography.labelSmall, color = Color(0xFF1E40AF), fontWeight = FontWeight.Bold)
-                        Text(String.format("S/ %.2f", totalProvReq), style = MaterialTheme.typography.titleLarge, color = Color(0xFF1E40AF), fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                                Icon(Icons.Default.LocalShipping, contentDescription = null, tint = Color(0xFF1E40AF), modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("PROVEEDOR", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(String.format("S/ %.2f", totalProvReq), style = MaterialTheme.typography.titleLarge, color = Color(0xFF1E40AF), fontWeight = FontWeight.ExtraBold)
                     }
                 }
                 
                 Card(
-                    modifier = Modifier.weight(1f).height(110.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4))
+                    modifier = Modifier.weight(1f).height(120.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxSize(),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("VALORIZACIÓN MINA", style = MaterialTheme.typography.labelSmall, color = Color(0xFF166534), fontWeight = FontWeight.Bold)
-                        Text(String.format("S/ %.2f", totalMinaReq), style = MaterialTheme.typography.titleLarge, color = Color(0xFF166534), fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.background(Color(0xFFF0FDF4), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                                Icon(Icons.Default.Business, contentDescription = null, tint = Color(0xFF166534), modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("MINA", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(String.format("S/ %.2f", totalMinaReq), style = MaterialTheme.typography.titleLarge, color = Color(0xFF166534), fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Rentabilidad Requerimientos
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                            Icon(Icons.Default.TrendingUp, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("DIFERENCIA (MINA - PROV)", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                    }
+                    Text(String.format("S/ %.2f", totalMinaReq - totalProvReq), style = MaterialTheme.typography.titleMedium, color = if (totalMinaReq - totalProvReq >= 0) ColorApproved else ColorRejected, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Análisis de Ingresos
             Text(
@@ -210,31 +297,71 @@ fun AnalisisScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Card(
-                    modifier = Modifier.weight(1f).height(110.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFDF4FF))
+                    modifier = Modifier.weight(1f).height(120.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxSize(),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("GASTO PROVEEDOR", style = MaterialTheme.typography.labelSmall, color = Color(0xFF701A75), fontWeight = FontWeight.Bold)
-                        Text(String.format("S/ %.2f", totalProvIng), style = MaterialTheme.typography.titleLarge, color = Color(0xFF701A75), fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.background(Color(0xFFFDF4FF), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                                Icon(Icons.Default.LocalShipping, contentDescription = null, tint = Color(0xFF701A75), modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("PROVEEDOR", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(String.format("S/ %.2f", totalProvIng), style = MaterialTheme.typography.titleLarge, color = Color(0xFF701A75), fontWeight = FontWeight.ExtraBold)
                     }
                 }
                 
                 Card(
-                    modifier = Modifier.weight(1f).height(110.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB))
+                    modifier = Modifier.weight(1f).height(120.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxSize(),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("VALORIZACIÓN MINA", style = MaterialTheme.typography.labelSmall, color = Color(0xFF78350F), fontWeight = FontWeight.Bold)
-                        Text(String.format("S/ %.2f", totalMinaIng), style = MaterialTheme.typography.titleLarge, color = Color(0xFF78350F), fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.background(Color(0xFFFFFBEB), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                                Icon(Icons.Default.Business, contentDescription = null, tint = Color(0xFF78350F), modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("MINA", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(String.format("S/ %.2f", totalMinaIng), style = MaterialTheme.typography.titleLarge, color = Color(0xFF78350F), fontWeight = FontWeight.ExtraBold)
                     }
+                }
+            }
+            
+            // Rentabilidad Ingresos
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp)).padding(6.dp)) {
+                            Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("DIFERENCIA (MINA - PROV)", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                    }
+                    Text(String.format("S/ %.2f", totalMinaIng - totalProvIng), style = MaterialTheme.typography.titleMedium, color = if (totalMinaIng - totalProvIng >= 0) ColorApproved else ColorRejected, fontWeight = FontWeight.Bold)
                 }
             }
 

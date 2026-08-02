@@ -35,7 +35,8 @@ data class IngresoHistorialItem(
     val total_proveedor: Double,
     val total_mina: Double,
     val minas: String? = null,
-    val proveedores: String? = null
+    val proveedores: String? = null,
+    val tipo_pago: String? = null
 )
 
 data class IngresoDetalleItem(

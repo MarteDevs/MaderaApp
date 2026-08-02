@@ -9,6 +9,7 @@ data class RequerimientoRequest(
     val fecha: String,
     val mina_id: Int,
     val supervisor_id: Int?,
+    val tipo_pago: String? = null,
     val detalles: List<DetalleRequest>
 )
 
@@ -35,7 +36,8 @@ data class RequerimientoHistorialItem(
     val estado: String,
     val total_proveedor: Double,
     val total_mina: Double,
-    val proveedores: String?
+    val proveedores: String?,
+    val tipo_pago: String? = null
 )
 
 data class RequerimientoDetalleItem(

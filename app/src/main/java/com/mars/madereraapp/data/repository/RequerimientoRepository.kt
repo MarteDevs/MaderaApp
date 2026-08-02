@@ -48,7 +48,8 @@ class RequerimientoRepository @Inject constructor(
                     total_mina = item.total_mina,
                     isPendingSync = false,
                     isHidden = item.codigo_req in currentHiddenCodigos,
-                    proveedores = item.proveedores
+                    proveedores = item.proveedores,
+                    tipoPago = item.tipo_pago
                 )
                 dao.insertRequerimiento(entity)
             }
@@ -88,6 +89,7 @@ class RequerimientoRepository @Inject constructor(
             fecha = requerimiento.fecha,
             mina_id = requerimiento.mina_id,
             supervisor_id = requerimiento.supervisor_id,
+            tipo_pago = requerimiento.tipoPago,
             detalles = detalles.map {
                 DetalleRequest(
                     articulo_id = it.articulo_id,

@@ -30,7 +30,9 @@ data class IngresoEntity(
     val total_mina: Double = 0.0,
     val minas: String? = null,
     val isPendingSync: Boolean = false,
-    val proveedores: String? = null
+    val proveedores: String? = null,
+    val viajeId: Int? = null,
+    val tipoPago: String? = null
 )
 
 @Entity(

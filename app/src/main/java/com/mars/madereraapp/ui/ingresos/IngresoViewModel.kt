@@ -25,12 +25,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.mars.madereraapp.data.repository.CatalogRepository
 
 enum class OrdenIngreso { POR_FECHA, POR_VALE }
 
 @HiltViewModel
 class IngresoViewModel @Inject constructor(
     private val repository: IngresoRepository,
+    private val catalogRepository: CatalogRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -46,6 +48,9 @@ class IngresoViewModel @Inject constructor(
     private val _filtroProveedor = MutableStateFlow("")
     val filtroProveedor = _filtroProveedor.asStateFlow()
 
+    private val _filtroDestino = MutableStateFlow("TODOS") // TODOS, DEPOSITO, DIRECTO
+    val filtroDestino = _filtroDestino.asStateFlow()
+
     private val _filtroMes = MutableStateFlow("")   // "", "01", "02", ..., "12"
     val filtroMes = _filtroMes.asStateFlow()
 
@@ -54,6 +59,9 @@ class IngresoViewModel @Inject constructor(
 
     private val _ordenActual = MutableStateFlow(OrdenIngreso.POR_FECHA)
     val ordenActual = _ordenActual.asStateFlow()
+
+    val viajesCatalog = catalogRepository.getViajes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val minasDisponibles: StateFlow<List<String>> = repository.ingresos.map { list ->
         list.mapNotNull { it.minas }
@@ -90,10 +98,13 @@ class IngresoViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val ingresos: StateFlow<List<IngresoEntity>> = combine(
-        _ordenActual, _filtroMes, _filtroAnio
-    ) { orden, mes, anio -> Triple(orden, mes, anio) }
-        .flatMapLatest { (orden, mes, anio) ->
-            val sourceFlow = if (orden == OrdenIngreso.POR_VALE) repository.ingresosByVale else repository.ingresos
+        _ordenActual, _filtroMes, _filtroAnio, _filtroDestino
+    ) { orden, mes, anio, destino -> 
+        data class FiltroCombinado(val orden: OrdenIngreso, val mes: String, val anio: String, val destino: String)
+        FiltroCombinado(orden, mes, anio, destino)
+    }
+        .flatMapLatest { combo ->
+            val sourceFlow = if (combo.orden == OrdenIngreso.POR_VALE) repository.ingresosByVale else repository.ingresos
             combine(
                 sourceFlow,
                 _filtroMina,
@@ -114,11 +125,14 @@ class IngresoViewModel @Inject constructor(
                 if (prov.isNotBlank()) {
                     filtrado = filtrado.filter { it.proveedores?.contains(prov, ignoreCase = true) == true }
                 }
-                if (mes.isNotBlank()) {
-                    filtrado = filtrado.filter { it.fecha.length >= 7 && it.fecha.substring(5, 7) == mes }
+                if (combo.destino != "TODOS") {
+                    filtrado = filtrado.filter { it.tipoPago == combo.destino }
                 }
-                if (anio.isNotBlank()) {
-                    filtrado = filtrado.filter { it.fecha.startsWith(anio) }
+                if (combo.mes.isNotBlank()) {
+                    filtrado = filtrado.filter { it.fecha.length >= 7 && it.fecha.substring(5, 7) == combo.mes }
+                }
+                if (combo.anio.isNotBlank()) {
+                    filtrado = filtrado.filter { it.fecha.startsWith(combo.anio) }
                 }
                 filtrado
             }
@@ -139,6 +153,10 @@ class IngresoViewModel @Inject constructor(
 
     fun updateFiltroProveedor(query: String) {
         _filtroProveedor.value = query
+    }
+
+    fun updateFiltroDestino(destino: String) {
+        _filtroDestino.value = destino
     }
 
     fun updateFiltroMes(mes: String) {

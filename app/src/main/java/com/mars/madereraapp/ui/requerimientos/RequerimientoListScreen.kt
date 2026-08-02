@@ -51,6 +51,7 @@ fun RequerimientoListScreen(
     val filtroMina by viewModel.filtroMina.collectAsState()
     val filtroSupervisor by viewModel.filtroSupervisor.collectAsState()
     val filtroProveedor by viewModel.filtroProveedor.collectAsState()
+    val filtroDestino by viewModel.filtroDestino.collectAsState()
     val filtroMes by viewModel.filtroMes.collectAsState()
     val filtroAnio by viewModel.filtroAnio.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -61,6 +62,7 @@ fun RequerimientoListScreen(
     var expandedMina by remember { mutableStateOf(false) }
     var expandedSupervisor by remember { mutableStateOf(false) }
     var expandedProveedor by remember { mutableStateOf(false) }
+    var expandedDestino by remember { mutableStateOf(false) }
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
 
@@ -73,6 +75,9 @@ fun RequerimientoListScreen(
 
     val estadoOpciones = listOf("TODOS", "PENDIENTE", "PARCIAL", "COMPLETADO")
     val estadoLabels = mapOf("TODOS" to "Todos", "PENDIENTE" to "Pendientes", "PARCIAL" to "Parciales", "COMPLETADO" to "Completados")
+
+    val destinoOpciones = listOf("TODOS", "DEPOSITO", "DIRECTO")
+    val destinoLabels = mapOf("TODOS" to "Todos", "DEPOSITO" to "Depósito", "DIRECTO" to "Directo")
 
     Scaffold(
         containerColor = BackgroundLight,
@@ -207,6 +212,43 @@ fun RequerimientoListScreen(
                                     DropdownMenuItem(
                                         text = { Text(mina.nombre) },
                                         onClick = { viewModel.filtroMina.value = mina.nombre; expandedMina = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Row 1.5: Destino
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedDestino,
+                            onExpandedChange = { expandedDestino = it },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = destinoLabels[filtroDestino] ?: "Todos",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Destino", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDestino) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedDestino,
+                                onDismissRequest = { expandedDestino = false }
+                            ) {
+                                destinoOpciones.forEach { opcion ->
+                                    DropdownMenuItem(
+                                        text = { Text(destinoLabels[opcion] ?: opcion) },
+                                        onClick = { viewModel.updateFiltroDestino(opcion); expandedDestino = false }
                                     )
                                 }
                             }
@@ -367,13 +409,14 @@ fun RequerimientoListScreen(
                         }
                         
                         // Clear button
-                        if (filtroEstado != "TODOS" || filtroMina != "TODAS" || filtroSupervisor != "TODOS" || filtroProveedor != "TODOS" || filtroMes.isNotBlank() || filtroAnio.isNotBlank() || searchQuery.isNotBlank()) {
+                        if (filtroEstado != "TODOS" || filtroMina != "TODAS" || filtroSupervisor != "TODOS" || filtroProveedor != "TODOS" || filtroDestino != "TODOS" || filtroMes.isNotBlank() || filtroAnio.isNotBlank() || searchQuery.isNotBlank()) {
                             IconButton(
                                 onClick = {
                                     viewModel.filtroEstado.value = "TODOS"
                                     viewModel.filtroMina.value = "TODAS"
                                     viewModel.filtroSupervisor.value = "TODOS"
                                     viewModel.filtroProveedor.value = "TODOS"
+                                    viewModel.updateFiltroDestino("TODOS")
                                     viewModel.filtroMes.value = ""
                                     viewModel.filtroAnio.value = ""
                                     viewModel.searchQuery.value = ""
@@ -648,6 +691,14 @@ fun RequerimientoCard(req: RequerimientoEntity, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    req.tipoPago?.takeIf { it != "PROVEEDOR" }?.let { tipo ->
+                        val badgeColor = when (tipo) {
+                            "DEPOSITO" -> Color(0xFFFFA000) // Yellow/Warning
+                            "DIRECTO" -> Color(0xFF2196F3)  // Blue/Info
+                            else -> TextTertiary
+                        }
+                        StatusBadge(tipo, badgeColor)
+                    }
                     if (req.isPendingSync) {
                         Icon(
                             Icons.Default.Sync,

@@ -20,6 +20,7 @@ class CatalogRepository @Inject constructor(
     fun getArticulos(): Flow<List<ArticuloEntity>> = dao.getAllArticulos()
     fun getProveedores(): Flow<List<ProveedorEntity>> = dao.getAllProveedores()
     fun getSupervisores(): Flow<List<SupervisorEntity>> = dao.getAllSupervisores()
+    fun getViajes(): Flow<List<com.mars.madereraapp.data.local.entities.ViajeEntity>> = dao.getAllViajes()
 
     // Sync method
     suspend fun syncCatalogs() {
@@ -43,6 +44,11 @@ class CatalogRepository @Inject constructor(
             val remoteSupervisores = apiService.getSupervisores()
             dao.clearSupervisores()
             dao.insertSupervisores(remoteSupervisores)
+
+            // Sync Viajes
+            val remoteViajes = apiService.getViajes()
+            dao.clearViajes()
+            dao.insertViajes(remoteViajes)
         } catch (e: Exception) {
             e.printStackTrace()
             // In a real app, handle error (e.g., logging or retry)

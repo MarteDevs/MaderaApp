@@ -34,3 +34,10 @@ data class SupervisorEntity(
     val nombre: String,
     val estado: Int
 )
+
+@Entity(tableName = "viajes")
+data class ViajeEntity(
+    @PrimaryKey val id: Int,
+    val nombre: String,
+    val estado: Int
+)

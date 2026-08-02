@@ -51,4 +51,14 @@ interface CatalogDao {
     
     @Query("DELETE FROM supervisores")
     suspend fun clearSupervisores()
+    
+    // Viajes
+    @Query("SELECT * FROM viajes WHERE estado = 1 ORDER BY id ASC")
+    fun getAllViajes(): Flow<List<com.mars.madereraapp.data.local.entities.ViajeEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertViajes(viajes: List<com.mars.madereraapp.data.local.entities.ViajeEntity>)
+    
+    @Query("DELETE FROM viajes")
+    suspend fun clearViajes()
 }

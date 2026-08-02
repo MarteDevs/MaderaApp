@@ -18,4 +18,7 @@ interface CatalogApiService {
 
     @GET("supervisores")
     suspend fun getSupervisores(): List<SupervisorEntity>
+
+    @GET("viajes")
+    suspend fun getViajes(): List<com.mars.madereraapp.data.local.entities.ViajeEntity>
 }

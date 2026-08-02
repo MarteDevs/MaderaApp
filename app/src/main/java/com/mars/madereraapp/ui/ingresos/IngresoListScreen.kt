@@ -109,6 +109,7 @@ fun IngresoListScreen(
             val filtroViaje by viewModel.filtroViaje.collectAsState()
             val filtroVale by viewModel.filtroVale.collectAsState()
             val filtroProveedor by viewModel.filtroProveedor.collectAsState()
+            val filtroDestino by viewModel.filtroDestino.collectAsState()
             val filtroMes by viewModel.filtroMes.collectAsState()
             val filtroAnio by viewModel.filtroAnio.collectAsState()
             val minasDisponibles by viewModel.minasDisponibles.collectAsState()
@@ -119,6 +120,7 @@ fun IngresoListScreen(
             var expandedMina by remember { mutableStateOf(false) }
             var expandedViaje by remember { mutableStateOf(false) }
             var expandedProveedor by remember { mutableStateOf(false) }
+            var expandedDestino by remember { mutableStateOf(false) }
             var expandedMes by remember { mutableStateOf(false) }
             var expandedAnio by remember { mutableStateOf(false) }
 
@@ -128,6 +130,9 @@ fun IngresoListScreen(
                 "08" to "Agosto", "09" to "Septiembre", "10" to "Octubre",
                 "11" to "Noviembre", "12" to "Diciembre"
             )
+
+            val destinoOpciones = listOf("TODOS", "DEPOSITO", "DIRECTO")
+            val destinoLabels = mapOf("TODOS" to "Todos", "DEPOSITO" to "Depósito", "DIRECTO" to "Directo")
 
 
             Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -204,6 +209,43 @@ fun IngresoListScreen(
                                     DropdownMenuItem(
                                         text = { Text("Viaje-$v") },
                                         onClick = { viewModel.updateFiltroViaje(v); expandedViaje = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Destino
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedDestino,
+                            onExpandedChange = { expandedDestino = it },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = destinoLabels[filtroDestino] ?: "Todos",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Destino", style = MaterialTheme.typography.labelSmall) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDestino) },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = PrimaryWood,
+                                    unfocusedBorderColor = DividerColor,
+                                    focusedContainerColor = SurfaceContainer,
+                                    unfocusedContainerColor = SurfaceContainer
+                                ),
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedDestino,
+                                onDismissRequest = { expandedDestino = false }
+                            ) {
+                                destinoOpciones.forEach { opcion ->
+                                    DropdownMenuItem(
+                                        text = { Text(destinoLabels[opcion] ?: opcion) },
+                                        onClick = { viewModel.updateFiltroDestino(opcion); expandedDestino = false }
                                     )
                                 }
                             }
@@ -321,13 +363,14 @@ fun IngresoListScreen(
                                 }
                             }
 
-                            if (filtroMina.isNotBlank() || filtroViaje.isNotBlank() || filtroVale.isNotBlank() || filtroProveedor.isNotBlank() || filtroMes.isNotBlank() || filtroAnio.isNotBlank()) {
+                            if (filtroMina.isNotBlank() || filtroViaje.isNotBlank() || filtroVale.isNotBlank() || filtroProveedor.isNotBlank() || filtroDestino != "TODOS" || filtroMes.isNotBlank() || filtroAnio.isNotBlank()) {
                                 IconButton(
                                     onClick = {
                                         viewModel.updateFiltroMina("")
                                         viewModel.updateFiltroViaje("")
                                         viewModel.updateFiltroVale("")
                                         viewModel.updateFiltroProveedor("")
+                                        viewModel.updateFiltroDestino("TODOS")
                                         viewModel.updateFiltroMes("")
                                         viewModel.updateFiltroAnio("")
                                     },

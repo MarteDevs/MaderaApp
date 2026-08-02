@@ -83,15 +83,48 @@ fun NewIngresoScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    GlassTextField(
-                        value = viaje,
-                        onValueChange = { viaje = it },
-                        label = "Nro Viaje / Placa",
-                        modifier = Modifier.weight(1f),
-                        leadingIcon = {
-                            Icon(Icons.Default.LocalShipping, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp))
+                    val viajesCatalog by viewModel.viajesCatalog.collectAsState()
+                    var expandedViaje by remember { mutableStateOf(false) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandedViaje,
+                        onExpandedChange = { expandedViaje = it },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = viaje.ifBlank { "Seleccionar Viaje" },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Nro Viaje / Placa", style = MaterialTheme.typography.labelSmall) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedViaje) },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                focusedBorderColor = PrimaryWood,
+                                unfocusedBorderColor = DividerColor,
+                                focusedContainerColor = SurfaceContainer,
+                                unfocusedContainerColor = SurfaceContainer
+                            ),
+                            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            leadingIcon = { Icon(Icons.Default.LocalShipping, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp)) }
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedViaje,
+                            onDismissRequest = { expandedViaje = false }
+                        ) {
+                            viajesCatalog.forEach { v ->
+                                DropdownMenuItem(
+                                    text = { Text(v.nombre) },
+                                    onClick = {
+                                        viaje = v.nombre
+                                        // If you need to store viajeId, you could add it here
+                                        expandedViaje = false
+                                    }
+                                )
+                            }
                         }
-                    )
+                    }
+
                     GlassTextField(
                         value = vale,
                         onValueChange = { vale = it },

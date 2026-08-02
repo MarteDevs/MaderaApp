@@ -17,9 +17,10 @@ import com.mars.madereraapp.data.local.entities.*
         RequerimientoDetalleEntity::class,
         RequerimientoPendienteEntity::class,
         IngresoEntity::class,
-        IngresoDetalleEntity::class
+        IngresoDetalleEntity::class,
+        ViajeEntity::class
     ],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 abstract class MaderaDatabase : RoomDatabase() {
