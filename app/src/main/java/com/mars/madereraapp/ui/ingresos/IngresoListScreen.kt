@@ -440,8 +440,8 @@ fun IngresoListScreen(
                     }
 
                 if (filtroMes.isNotBlank() || filtroAnio.isNotBlank() || filtroProveedor.isNotBlank()) {
-                    val totalMina = ingresos.sumOf { it.total_mina }
-                    val totalProv = ingresos.sumOf { it.total_proveedor }
+                    val totalMina = ingresos.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_mina }
+                    val totalProv = ingresos.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_proveedor }
                     
                     Surface(
                         modifier = Modifier.fillMaxWidth(),

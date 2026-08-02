@@ -56,7 +56,7 @@ class AnalisisViewModel @Inject constructor(
             val matchesAnio = if (anio.isBlank()) true else req.fecha.startsWith(anio)
             val matchesDestino = if (destino == "TODOS") true else req.tipoPago == destino
             matchesMes && matchesAnio && matchesDestino
-        }.sumOf { it.total_proveedor }
+        }.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_proveedor }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalMinaReq = combine(
@@ -67,7 +67,7 @@ class AnalisisViewModel @Inject constructor(
             val matchesAnio = if (anio.isBlank()) true else req.fecha.startsWith(anio)
             val matchesDestino = if (destino == "TODOS") true else req.tipoPago == destino
             matchesMes && matchesAnio && matchesDestino
-        }.sumOf { it.total_mina }
+        }.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_mina }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalProveedorIngreso = combine(
@@ -78,7 +78,7 @@ class AnalisisViewModel @Inject constructor(
             val matchesAnio = if (anio.isBlank()) true else ing.fecha.startsWith(anio)
             val matchesDestino = if (destino == "TODOS") true else ing.tipoPago == destino
             matchesMes && matchesAnio && matchesDestino
-        }.sumOf { it.total_proveedor }
+        }.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_proveedor }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalMinaIngreso = combine(
@@ -89,6 +89,6 @@ class AnalisisViewModel @Inject constructor(
             val matchesAnio = if (anio.isBlank()) true else ing.fecha.startsWith(anio)
             val matchesDestino = if (destino == "TODOS") true else ing.tipoPago == destino
             matchesMes && matchesAnio && matchesDestino
-        }.sumOf { it.total_mina }
+        }.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_mina }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }

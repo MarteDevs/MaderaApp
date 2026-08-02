@@ -496,8 +496,8 @@ fun RequerimientoListScreen(
 
             // Barra Fija de Resumen
             if (filtroMes.isNotBlank() || filtroAnio.isNotBlank()) {
-                val totalMina = requerimientos.sumOf { it.total_mina }
-                val totalProv = requerimientos.sumOf { it.total_proveedor }
+                val totalMina = requerimientos.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_mina }
+                val totalProv = requerimientos.sumOf { if (it.tipoPago == "DIRECTO") 0.0 else it.total_proveedor }
                 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
