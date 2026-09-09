@@ -86,42 +86,51 @@ fun NewIngresoScreen(
                 ) {
                     val viajesCatalog by viewModel.viajesCatalog.collectAsState()
                     var expandedViaje by remember { mutableStateOf(false) }
+                    val isViajeDisabled = tipoPago == "DEPOSITO" || tipoPago == "DIRECTO"
 
                     ExposedDropdownMenuBox(
-                        expanded = expandedViaje,
-                        onExpandedChange = { expandedViaje = it },
+                        expanded = if (isViajeDisabled) false else expandedViaje,
+                        onExpandedChange = { if (!isViajeDisabled) expandedViaje = it },
                         modifier = Modifier.weight(1f)
                     ) {
                         OutlinedTextField(
-                            value = viaje.ifBlank { "Seleccionar Viaje" },
+                            value = if (isViajeDisabled) "No aplica ($tipoPago)" else viaje.ifBlank { "Seleccionar Viaje" },
                             onValueChange = {},
                             readOnly = true,
+                            enabled = !isViajeDisabled,
                             label = { Text("Nro Viaje / Placa", style = MaterialTheme.typography.labelSmall) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedViaje) },
+                            trailingIcon = { 
+                                if (!isViajeDisabled) {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedViaje)
+                                }
+                            },
                             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                                 focusedBorderColor = PrimaryWood,
                                 unfocusedBorderColor = DividerColor,
+                                disabledBorderColor = DividerColor.copy(alpha = 0.5f),
                                 focusedContainerColor = SurfaceContainer,
-                                unfocusedContainerColor = SurfaceContainer
+                                unfocusedContainerColor = SurfaceContainer,
+                                disabledContainerColor = SurfaceContainer.copy(alpha = 0.5f)
                             ),
-                            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth(),
+                            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = !isViajeDisabled).fillMaxWidth(),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             leadingIcon = { Icon(Icons.Default.LocalShipping, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp)) }
                         )
-                        ExposedDropdownMenu(
-                            expanded = expandedViaje,
-                            onDismissRequest = { expandedViaje = false }
-                        ) {
-                            viajesCatalog.forEach { v ->
-                                DropdownMenuItem(
-                                    text = { Text(v.nombre) },
-                                    onClick = {
-                                        viaje = v.nombre
-                                        // If you need to store viajeId, you could add it here
-                                        expandedViaje = false
-                                    }
-                                )
+                        if (!isViajeDisabled) {
+                            ExposedDropdownMenu(
+                                expanded = expandedViaje,
+                                onDismissRequest = { expandedViaje = false }
+                            ) {
+                                viajesCatalog.forEach { v ->
+                                    DropdownMenuItem(
+                                        text = { Text(v.nombre) },
+                                        onClick = {
+                                            viaje = v.nombre
+                                            expandedViaje = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -144,12 +153,26 @@ fun NewIngresoScreen(
                 ) {
                     FilterChip(
                         selected = tipoPago == "DEPOSITO",
-                        onClick = { tipoPago = if (tipoPago == "DEPOSITO") null else "DEPOSITO" },
+                        onClick = { 
+                            if (tipoPago == "DEPOSITO") {
+                                tipoPago = null
+                            } else {
+                                tipoPago = "DEPOSITO"
+                                viaje = ""
+                            }
+                        },
                         label = { Text("DEPÓSITO", style = MaterialTheme.typography.labelSmall) }
                     )
                     FilterChip(
                         selected = tipoPago == "DIRECTO",
-                        onClick = { tipoPago = if (tipoPago == "DIRECTO") null else "DIRECTO" },
+                        onClick = { 
+                            if (tipoPago == "DIRECTO") {
+                                tipoPago = null
+                            } else {
+                                tipoPago = "DIRECTO"
+                                viaje = ""
+                            }
+                        },
                         label = { Text("DIRECTO", style = MaterialTheme.typography.labelSmall) }
                     )
                     if (tipoPago == null) {
@@ -245,7 +268,7 @@ fun NewIngresoScreen(
                                     val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                                     viewModel.registrarIngreso(
                                         fecha = sdf.format(Date()),
-                                        viaje = viaje.ifBlank { null },
+                                        viaje = if (tipoPago == "DEPOSITO" || tipoPago == "DIRECTO") null else viaje.ifBlank { null },
                                         vale = vale.ifBlank { null },
                                         observacion = "Registro desde App Móvil",
                                         tipoPago = tipoPago,
