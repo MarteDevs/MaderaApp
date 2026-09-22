@@ -1,0 +1,12 @@
+{
+    "schema_version": 2,
+    "commit": "ea202f7f8ce1afe2b7fb979c23eb9a65bd6092ad",
+    "indexed_at": "2026-09-21T20:39:45Z",
+    "project": "madera-app-android",
+    "nodes": 726,
+    "edges": 2272,
+    "original_size": 3342336,
+    "compressed_size": 324506,
+    "compression_level": 9,
+    "reconcile_basis": "git-clean-head"
+}
