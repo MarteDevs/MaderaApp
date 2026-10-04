@@ -3,15 +3,13 @@ package com.mars.madereraapp.ui.requerimientos
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.mars.madereraapp.data.local.entities.RequerimientoDetalleEntity
 import com.mars.madereraapp.data.local.entities.RequerimientoEntity
 import com.mars.madereraapp.data.repository.CatalogRepository
 import com.mars.madereraapp.data.repository.RequerimientoRepository
 import com.mars.madereraapp.data.repository.IngresoRepository
 import com.mars.madereraapp.data.sync.UploadRequerimientoWorker
+import com.mars.madereraapp.data.sync.enqueueUploadWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,11 +198,7 @@ class RequerimientoViewModel @Inject constructor(
             val localId = repository.guardarRequerimientoLocal(
                 fecha, minaId, minaNombre, supervisorId, supervisorNombre, detalles
             )
-            // Programar subida
-            val uploadRequest = OneTimeWorkRequestBuilder<UploadRequerimientoWorker>()
-                .setInputData(Data.Builder().putLong("localId", localId).build())
-                .build()
-            WorkManager.getInstance(context).enqueue(uploadRequest)
+            enqueueUploadWork<UploadRequerimientoWorker>(context, localId)
         }
     }
 }

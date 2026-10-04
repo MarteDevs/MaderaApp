@@ -3,14 +3,12 @@ package com.mars.madereraapp.ui.ingresos
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.mars.madereraapp.data.local.entities.IngresoDetalleEntity
 import com.mars.madereraapp.data.local.entities.IngresoEntity
 import com.mars.madereraapp.data.local.entities.RequerimientoPendienteEntity
 import com.mars.madereraapp.data.repository.IngresoRepository
 import com.mars.madereraapp.data.sync.UploadIngresoWorker
+import com.mars.madereraapp.data.sync.enqueueUploadWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlin.OptIn
@@ -197,11 +195,7 @@ class IngresoViewModel @Inject constructor(
             val localId = repository.guardarIngresoLocal(
                 fecha, viaje, vale, observacion, tipoPago, detalles
             )
-            // Programar subida
-            val uploadRequest = OneTimeWorkRequestBuilder<UploadIngresoWorker>()
-                .setInputData(Data.Builder().putLong("localId", localId).build())
-                .build()
-            WorkManager.getInstance(context).enqueue(uploadRequest)
+            enqueueUploadWork<UploadIngresoWorker>(context, localId)
         }
     }
 }
